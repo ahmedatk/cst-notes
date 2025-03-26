@@ -3,17 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notes Website</title>
+    <title>Login</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <h2>Login / Sign Up</h2>
+        <h2>Login</h2>
         <input type="email" id="email" placeholder="Enter Email">
         <input type="password" id="password" placeholder="Enter Password">
-        <button onclick="signUp()">Sign Up</button>
-        <button onclick="login()">Login</button>
-        <button onclick="logout()">Logout</button>
+        <button id="loginBtn">Login</button>
+        <button id="googleBtn" class="google-btn">Login with Google</button>
+
+        <p>Don't have an account? <a href="signup.html">Sign Up</a></p>
         <p id="status"></p>
     </div>
 

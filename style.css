@@ -30,3 +30,14 @@ button {
     border: none;
     border-radius: 3px;
 }
+
+.google-btn {
+    background: #DB4437;
+    color: white;
+    border: none;
+    padding: 10px;
+    width: 95%;
+    margin: 10px 0;
+    cursor: pointer;
+    border-radius: 3px;
+}
