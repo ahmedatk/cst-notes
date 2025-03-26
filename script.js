@@ -32,15 +32,25 @@ function signUp() {
 function login() {
     let email = document.getElementById("email").value;
     let password = document.getElementById("password").value;
-    
+
     auth.signInWithEmailAndPassword(email, password)
-        .then(() => {
-            document.getElementById("status").innerText = "Login Successful!";
+        .then((userCredential) => {
+            document.getElementById("status").innerText = "Login Successful! Redirecting...";
+            setTimeout(() => {
+                window.location.href = "dashboard.html"; // Redirect to notes dashboard
+            }, 2000);
         })
         .catch(error => {
             document.getElementById("status").innerText = error.message;
         });
 }
+
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        window.location.href = "dashboard.html"; // Redirect logged-in users to dashboard
+    }
+});
+
 
 // Logout Function
 function logout() {

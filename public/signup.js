@@ -19,20 +19,21 @@ function signUp() {
     let email = document.getElementById("email").value;
     let password = document.getElementById("password").value;
     let confirmPassword = document.getElementById("confirmPassword").value;
-    
+
     if (password !== confirmPassword) {
         document.getElementById("status").innerText = "Passwords do not match!";
         return;
     }
 
     auth.createUserWithEmailAndPassword(email, password)
-        .then(() => {
+        .then((userCredential) => {
             document.getElementById("status").innerText = "Signup Successful! Redirecting...";
             setTimeout(() => {
-                window.location.href = "index.html"; // Redirect to login page
+                window.location.href = "index.html"; // Redirect to login
             }, 2000);
         })
         .catch(error => {
             document.getElementById("status").innerText = error.message;
         });
 }
+
