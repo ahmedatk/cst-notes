@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "cstnotes-f0e59"
-  }
+    "default": "cst-notes-71801"
+  },
+  "targets": {},
+  "etags": {}
 }
