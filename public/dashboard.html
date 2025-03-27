@@ -3,9 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>CST Notes</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Courier New', monospace; }
+        body { background: #0d1117; color: #c9d1d9; }
+        .navbar { background: #161b22; padding: 15px; text-align: center; color: #58a6ff; font-size: 24px; font-weight: bold; border-bottom: 2px solid #58a6ff; }
+        .container { max-width: 1200px; width: 100%; margin: auto; padding: 20px; }
+        .section { background: #161b22; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(88, 166, 255, 0.2); }
+        .section h2 { margin-bottom: 15px; color: #58a6ff; }
+        .notes-list { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; }
+        .note-card { background: #21262d; padding: 15px; border-radius: 8px; text-align: center; width: 200px; box-shadow: 0 2px 4px rgba(88, 166, 255, 0.3); }
+        .note-card img { width: 100%; height: auto; border-radius: 5px; margin-bottom: 10px; }
+        .note-card:hover { background: #30363d; cursor: pointer; }
+        @media (max-width: 768px) {
+            .notes-list { flex-direction: column; align-items: center; }
+        }
+    </style>
 </head>
 <body>
-    <h1>logged in!!!!!!</h1>
+    <div class="navbar">CST Notes</div>
+    <div class="container">
+        <div class="section">
+            <h2><i class="fa fa-book"></i> Subjects</h2>
+            <div class="notes-list">
+                <div class="note-card"><img src="subject1.jpg" alt="Mathematics"><div>Mathematics</div></div>
+                <div class="note-card"><img src="subject2.jpg" alt="Physics"><div>Physics</div></div>
+                <div class="note-card"><img src="subject3.jpg" alt="Computer Science"><div>Computer Science</div></div>
+            </div>
+        </div>
+        <div class="section">
+            <h2><i class="fa fa-file-alt"></i> Assignments</h2>
+            <div class="notes-list">
+                <div class="note-card"><img src="assignment1.jpg" alt="Assignment 1"><div>Assignment 1</div></div>
+                <div class="note-card"><img src="assignment2.jpg" alt="Assignment 2"><div>Assignment 2</div></div>
+            </div>
+        </div>
+        <div class="section">
+            <h2><i class="fa fa-sticky-note"></i> Class Notes</h2>
+            <div class="notes-list">
+                <div class="note-card"><img src="notes1.jpg" alt="Notes 1"><div>Notes 1</div></div>
+                <div class="note-card"><img src="notes2.jpg" alt="Notes 2"><div>Notes 2</div></div>
+            </div>
+        </div>
+        <div class="section">
+            <h2><i class="fa fa-chalkboard-teacher"></i> Lecture Notes</h2>
+            <div class="notes-list">
+                <div class="note-card"><img src="lecture1.jpg" alt="Lecture Notes 1"><div>Notes 1</div></div>
+                <div class="note-card"><img src="lecture2.jpg" alt="Lecture Notes 2"><div>Notes 2</div></div>
+            </div>
+        </div>
+        <div class="section">
+            <h2><i class="fa fa-laptop"></i> E-Notes</h2>
+            <div class="notes-list">
+                <div class="note-card"><img src="e-note1.jpg" alt="E-Notes 1"><div>Notes 1</div></div>
+                <div class="note-card"><img src="e-note2.jpg" alt="E-Notes 2"><div>Notes 2</div></div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
