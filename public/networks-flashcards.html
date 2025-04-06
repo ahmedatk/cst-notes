@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CST Notes Dashboard</title>
+    <title>Computer Networks Flashcards</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
     <style>
@@ -71,6 +71,24 @@
             color: transparent;
         }
 
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary);
+        }
+
         .logout-btn {
             display: flex;
             align-items: center;
@@ -95,7 +113,7 @@
             padding: 2rem 1rem;
         }
 
-        .dashboard-title {
+        .page-title {
             font-size: 2rem;
             font-weight: 700;
             text-align: center;
@@ -106,16 +124,16 @@
             color: transparent;
         }
 
-        /* Cards Grid */
-        .cards-grid {
+        /* Units Grid */
+        .units-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            max-width: 900px;
+            gap: 1.5rem;
+            max-width: 1000px;
             margin: 0 auto;
         }
 
-        .card {
+        .unit-card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 0.75rem;
@@ -125,67 +143,59 @@
             transition: var(--transition);
         }
 
-        .card:hover {
+        .unit-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.4);
         }
 
-        .card-header {
-            padding: 1.25rem 1.5rem 0.5rem;
+        .unit-header {
+            padding: 1.25rem 1.5rem;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.03);
         }
 
-        .card-title {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+        .unit-title {
             font-size: 1.25rem;
             font-weight: 600;
-        }
-
-        .card-title i {
-            color: var(--accent-color);
-        }
-
-        .card-content {
-            padding: 1.5rem;
-        }
-
-        .links-list {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .link-item a {
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            padding: 1rem;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 0.5rem;
-            color: var(--text-secondary);
-            text-decoration: none;
-            transition: var(--transition);
         }
 
-        .link-item a:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: var(--text-primary);
-        }
-
-        .link-item a i {
-            color: var(--secondary-color);
-            transition: var(--transition);
-        }
-
-        .link-item a:hover i {
+        .unit-title i {
             color: var(--accent-color);
         }
 
-        .link-title {
+        .unit-content {
+            padding: 1.5rem;
+        }
+
+        .unit-description {
+            margin-bottom: 1.25rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .view-unit-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--accent-color);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 0.5rem;
             font-weight: 500;
+            text-decoration: none;
+            transition: var(--transition);
+            width: 100%;
+            justify-content: center;
+        }
+
+        .view-unit-btn:hover {
+            background: rgba(99, 102, 241, 0.25);
+            border-color: rgba(99, 102, 241, 0.5);
+            color: var(--accent-hover);
         }
 
         /* Animation for background effect */
@@ -209,8 +219,12 @@
 
         /* Responsive adjustments */
         @media (max-width: 768px) {
-            .cards-grid {
+            .units-grid {
                 grid-template-columns: 1fr;
+            }
+            
+            .nav-links {
+                display: none;
             }
         }
     </style>
@@ -224,6 +238,12 @@
         <header>
             <div class="header-content">
                 <h1 class="logo">CST Notes</h1>
+                <div class="nav-links">
+                    <a href="dashboard.html" class="nav-link">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </div>
                 <button class="logout-btn" onclick="alert('Signing out...')">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Sign Out</span>
@@ -232,58 +252,104 @@
         </header>
 
         <main>
-            <h2 class="dashboard-title">Dashboard</h2>
+            <h2 class="page-title">Computer Networks Flashcards</h2>
 
-            <div class="cards-grid">
-                <!-- Important Questions Card -->
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">
-                            <i class="fas fa-question-circle"></i>
-                            <span>Important Questions</span>
+            <div class="units-grid">
+                <!-- Unit 1 -->
+                <div class="unit-card">
+                    <div class="unit-header">
+                        <div class="unit-title">
+                            <i class="fas fa-network-wired"></i>
+                            <span>UNIT – I Introduction</span>
                         </div>
                     </div>
-                    <div class="card-content">
-                        <ul class="links-list">
-                            <li class="link-item">
-                                <a href="networks.html" class="link">
-                                    <i class="fas fa-network-wired"></i>
-                                    <span class="link-title">Introduction to Computer Networks</span>
-                                </a>
-                            </li>
-                            <li class="link-item">
-                                <a href="supply-chain.html" class="link">
-                                    <i class="fas fa-truck"></i>
-                                    <span class="link-title">Supply Chain Management and Logistics</span>
-                                </a>
-                            </li>
-                        </ul>
+                    <div class="unit-content">
+                        <p class="unit-description">
+                            Uses of Computer Networks, Types of Computer Networks ,Network Technology, from Local to Global,
+Examples of Networks , Network Protocols, Reference Models , Standardization
+                        </p>
+                        <a href="unit1-networks.html" class="view-unit-btn">
+                            <i class="fas fa-book-open"></i>
+                            <span>View Flashcards</span>
+                        </a>
                     </div>
                 </div>
                 
-                <!-- Revision Flashcards Card -->
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">
-                            <i class="fas fa-book-open"></i>
-                            <span>Revision Flashcards</span>
+                <!-- Unit 2 -->
+                <div class="unit-card">
+                    <div class="unit-header">
+                        <div class="unit-title">
+                            <i class="fas fa-microchip"></i>
+                            <span>UNIT – II The Physical Layer</span>
                         </div>
                     </div>
-                    <div class="card-content">
-                        <ul class="links-list">
-                            <li class="link-item">
-                                <a href="networks-flashcards.html" class="link">
-                                    <i class="fas fa-network-wired"></i>
-                                    <span class="link-title">Introduction to Computer Networks</span>
-                                </a>
-                            </li>
-                            <li class="link-item">
-                                <a href="supply-chain-flashcards.html" class="link">
-                                    <i class="fas fa-truck"></i>
-                                    <span class="link-title">Supply Chain Management and Logistics</span>
-                                </a>
-                            </li>
-                        </ul>
+                    <div class="unit-content">
+                        <p class="unit-description">
+                            Guided Transmission Media, Wireless Transmission, Using the Spectrum for Transmission, From
+Waveforms to Bits, Communication Satellites.
+                        </p>
+                        <a href="unit2-networks.html" class="view-unit-btn">
+                            <i class="fas fa-book-open"></i>
+                            <span>View Flashcards</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Unit 3 -->
+                <div class="unit-card">
+                    <div class="unit-header">
+                        <div class="unit-title">
+                            <i class="fas fa-link"></i>
+                            <span>UNIT – III The Data Link Layer and Medium Access Control</span>
+                        </div>
+                    </div>
+                    <div class="unit-content">
+                        <p class="unit-description">
+                            Data Link Layer Design Issues, Error Detection and Correction , ElementaryData Link Protocols , Improving
+Efficiency
+                        </p>
+                        <a href="unit3-networks.html" class="view-unit-btn">
+                            <i class="fas fa-book-open"></i>
+                            <span>View Flashcards</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Unit 4 -->
+                <div class="unit-card">
+                    <div class="unit-header">
+                        <div class="unit-title">
+                            <i class="fas fa-route"></i>
+                            <span>UNIT – IV The Network Layer</span>
+                        </div>
+                    </div>
+                    <div class="unit-content">
+                        <p class="unit-description">
+                            Network Layer Design Issues, Routing Algorithms in a Single Network, The Network Layer in the Internet
+                        </p>
+                        <a href="unit4-networks.html" class="view-unit-btn">
+                            <i class="fas fa-book-open"></i>
+                            <span>View Flashcards</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Unit 5 -->
+                <div class="unit-card">
+                    <div class="unit-header">
+                        <div class="unit-title">
+                            <i class="fas fa-layer-group"></i>
+                            <span>UNIT – V Transport & Application Layers</span>
+                        </div>
+                    </div>
+                    <div class="unit-content">
+                        <p class="unit-description">
+                            DNS — The Domain Name System , Electronic Mail , WWW, Streaming Audio and Video
+                        </p>
+                        <a href="unit5-networks.html" class="view-unit-btn">
+                            <i class="fas fa-book-open"></i>
+                            <span>View Flashcards</span>
+                        </a>
                     </div>
                 </div>
             </div>

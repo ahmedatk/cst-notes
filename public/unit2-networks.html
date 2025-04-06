@@ -1,0 +1,1386 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit II - The Physical Layer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+    <style>
+        :root {
+            --accent-color: #6366f1;
+            --accent-hover: #4f46e5;
+            --secondary-color: #9333ea;
+            --highlight-color: #06b6d4;
+            --bg-gradient: linear-gradient(to bottom, #0f0f17, #1a1a2e);
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-primary: rgba(255, 255, 255, 0.95);
+            --text-secondary: rgba(255, 255, 255, 0.8);
+            --text-muted: rgba(255, 255, 255, 0.6);
+            --shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.3);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .wrapper {
+            position: relative;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Header Styles */
+        header {
+            border-bottom: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+            background-color: rgba(0, 0, 0, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #fff, rgba(255, 255, 255, 0.7));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary);
+        }
+
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            padding: 0.5rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .logout-btn:hover {
+            color: var(--text-primary);
+        }
+
+        /* Main Container */
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, #fff, rgba(255, 255, 255, 0.7));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .page-subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 2.5rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Flashcard Styles */
+        .flashcard-container {
+            max-width: 800px;
+            margin: 0 auto 3rem;
+        }
+
+        .card-wrapper {
+            perspective: 1000px;
+            min-height: 300px;
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .flashcard {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+            background: transparent;
+        }
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 1rem;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        .card-front {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(147, 51, 234, 0.1));
+            border: 1px solid rgba(6, 182, 212, 0.3);
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, rgba(147, 51, 234, 0.1), rgba(6, 182, 212, 0.1));
+            border: 1px solid rgba(147, 51, 234, 0.3);
+            transform: rotateY(180deg);
+        }
+
+        .card-number {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .card-hint {
+            position: absolute;
+            bottom: 1rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .question, .answer {
+            font-size: 1.25rem;
+            line-height: 1.6;
+            max-width: 90%;
+        }
+
+        .answer {
+            color: var(--highlight-color);
+            font-weight: 500;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-secondary);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .btn-primary {
+            background: rgba(6, 182, 212, 0.2);
+            color: var(--highlight-color);
+            border-color: rgba(6, 182, 212, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: rgba(6, 182, 212, 0.3);
+            color: var(--highlight-color);
+        }
+
+        .btn-success {
+            background: rgba(16, 185, 129, 0.2);
+            color: rgb(16, 185, 129);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-success:hover {
+            background: rgba(16, 185, 129, 0.3);
+            color: rgb(16, 185, 129);
+        }
+
+        .progress-container {
+            margin-bottom: 1.5rem;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .progress-bar {
+            height: 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(to right, var(--highlight-color), var(--secondary-color));
+            border-radius: 1rem;
+            transition: width 0.3s ease;
+        }
+
+        /* Mode Toggle */
+        .mode-toggle {
+            display: flex;
+            gap: 0.75rem;
+            padding: 0.25rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .mode-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: var(--transition);
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+        }
+
+        .mode-btn.active {
+            background: rgba(6, 182, 212, 0.2);
+            color: var(--highlight-color);
+        }
+
+        /* Keyboard shortcuts */
+        .shortcuts {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .shortcuts-title {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .shortcuts-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .shortcut-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .key {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 1.5rem;
+            height: 1.5rem;
+            padding: 0 0.25rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.25rem;
+            font-family: monospace;
+            font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-secondary);
+        }
+
+        /* Additional Resources */
+        .resources {
+            margin-top: 3rem;
+        }
+
+        .resources-title {
+            font-size: 1.5rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .resources-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .resource-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            transition: var(--transition);
+        }
+
+        .resource-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .resource-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 0.75rem;
+            background: rgba(6, 182, 212, 0.15);
+            color: var(--highlight-color);
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+        }
+
+        .resource-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .resource-description {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .resource-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--highlight-color);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .resource-link:hover {
+            color: var(--accent-hover);
+            text-decoration: underline;
+        }
+
+        /* Toast notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-width: 350px;
+        }
+
+        .toast {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            color: var(--text-primary);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            animation: slide-in 0.3s ease forwards;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-left: 3px solid var(--highlight-color);
+        }
+
+        .toast-icon {
+            font-size: 1.25rem;
+            color: var(--highlight-color);
+        }
+
+        .toast-content {
+            flex-grow: 1;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .toast-message {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        @keyframes slide-in {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Confetti animation */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 99;
+        }
+
+        /* Animation for background effect */
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .animated-bg canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 1.75rem;
+            }
+            
+            .question, .answer {
+                font-size: 1.125rem;
+            }
+            
+            .card-wrapper {
+                min-height: 250px;
+            }
+            
+            .flashcard {
+                min-height: 250px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .nav-buttons {
+                justify-content: space-between;
+                width: 100%;
+            }
+            
+            .resources-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+        }
+
+        /* Footer Styles */
+        footer {
+            border-top: 1px solid var(--border-color);
+            padding: 1.5rem 0;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-top: 3rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        /* Animation for reveal */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        /* Staggered animation delays */
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+        .delay-4 { animation-delay: 0.4s; }
+        .delay-5 { animation-delay: 0.5s; }
+
+        /* Theme specific styles for Unit 2 */
+        .unit2-theme {
+            --highlight-color: #06b6d4;
+            --secondary-highlight: #0e7490;
+        }
+        
+        .unit2-gradient {
+            background: linear-gradient(135deg, #06b6d4, #0e7490);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .tech-diagram {
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.75rem;
+        }
+        
+        .tech-diagram-title {
+            text-align: center;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            color: var(--highlight-color);
+        }
+        
+        .diagram-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper unit2-theme">
+        <div class="animated-bg">
+            <canvas id="particleCanvas"></canvas>
+        </div>
+
+        <canvas id="confetti-canvas"></canvas>
+
+        <header>
+            <div class="header-content">
+                <h1 class="logo"><i class="fas fa-microchip"></i> CST Notes</h1>
+                <div class="nav-links">
+                    <a href="networks-flashcards.html" class="nav-link">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>All Units</span>
+                    </a>
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-book"></i>
+                        <span>Study Guide</span>
+                    </a>
+                </div>
+                <button class="logout-btn" onclick="alert('Signing out...')">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Sign Out</span>
+                </button>
+            </div>
+        </header>
+
+        <main>
+            <h2 class="page-title fade-in">UNIT II - The Physical Layer</h2>
+            <p class="page-subtitle fade-in delay-1">
+                Master key concepts about transmission media, multiplexing, satellites, and data encoding techniques
+            </p>
+
+            <div class="flashcard-container">
+                <div class="progress-container fade-in delay-2">
+                    <div class="progress-info">
+                        <span id="progress-text">Progress: 0%</span>
+                        <span id="cards-count">Card 1 of 25</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <div class="controls fade-in delay-2">
+                    <div class="nav-buttons">
+                        <button id="prev-btn" class="btn">
+                            <i class="fas fa-chevron-left"></i>
+                            Previous
+                        </button>
+                        <button id="next-btn" class="btn">
+                            Next
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="mode-toggle">
+                        <button id="all-cards-btn" class="mode-btn active">All Cards</button>
+                        <button id="unknown-cards-btn" class="mode-btn">Unknown Only</button>
+                    </div>
+                    
+                    <button id="mark-known-btn" class="btn btn-primary">
+                        <i class="fas fa-lightbulb"></i>
+                        Mark as Known
+                    </button>
+                </div>
+
+                <div id="card-wrapper" class="card-wrapper fade-in delay-3">
+                    <div id="flashcard" class="flashcard">
+                        <div class="card-front">
+                            <span id="card-number" class="card-number">1/25</span>
+                            <p id="question" class="question">What is Frequency Division Multiplexing (FDM)?</p>
+                            <div class="card-hint">
+                                <i class="fas fa-undo-alt"></i>
+                                Click to flip
+                            </div>
+                        </div>
+                        <div class="card-back">
+                            <span id="card-number-back" class="card-number">1/25</span>
+                            <p id="answer" class="answer">FDM is a technique that subdivides the available bandwidth of a single transmission medium into several frequency channels, each allocated to different devices.</p>
+                            <div class="card-hint">
+                                <i class="fas fa-undo-alt"></i>
+                                Click to flip
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="shortcuts fade-in delay-4">
+                    <h3 class="shortcuts-title">Keyboard Shortcuts</h3>
+                    <div class="shortcuts-list">
+                        <div class="shortcut-item">
+                            <span class="key">Space</span>
+                            <span>Flip card</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <span class="key">←</span>
+                            <span>Previous card</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <span class="key">→</span>
+                            <span>Next card</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <span class="key">K</span>
+                            <span>Mark as known</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <span class="key">R</span>
+                            <span>Reset progress</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tech-diagram fade-in delay-4">
+                <h3 class="tech-diagram-title">Multiplexing Techniques</h3>
+                <div class="diagram-content">
+                    <img src="https://placehold.co/600x200/06b6d4/white?text=Multiplexing+Techniques+Diagram" alt="Multiplexing Techniques Diagram" style="max-width: 100%; border-radius: 8px;">
+                    <p style="margin-top: 1rem; text-align: center; color: var(--text-secondary); font-size: 0.9rem;">
+                        Comparison of FDM, TDM, and WDM techniques and their applications in modern communication systems.
+                    </p>
+                </div>
+            </div>
+
+            <div class="resources fade-in delay-5">
+                <h3 class="resources-title">Additional Resources</h3>
+                <div class="resources-grid">
+                    <div class="resource-card">
+                        <div class="resource-icon">
+                            <i class="fas fa-satellite-dish"></i>
+                        </div>
+                        <h4 class="resource-title">Satellite Communication</h4>
+                        <p class="resource-description">
+                            Detailed documentation about satellite orbits, transponders, and applications in global communication.
+                        </p>
+                        <a href="#" class="resource-link">
+                            Download PDF
+                            <i class="fas fa-download"></i>
+                        </a>
+                    </div>
+                    <div class="resource-card">
+                        <div class="resource-icon">
+                            <i class="fas fa-wave-square"></i>
+                        </div>
+                        <h4 class="resource-title">Signal Modulation</h4>
+                        <p class="resource-description">
+                            Interactive simulation showing different modulation techniques like ASK, FSK, and PSK.
+                        </p>
+                        <a href="#" class="resource-link">
+                            View Simulation
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
+                    </div>
+                    <div class="resource-card">
+                        <div class="resource-icon">
+                            <i class="fas fa-network-wired"></i>
+                        </div>
+                        <h4 class="resource-title">Fiber Optics</h4>
+                        <p class="resource-description">
+                            Learn about the principles, components, and applications of fiber-optic transmission.
+                        </p>
+                        <a href="#" class="resource-link">
+                            Read Article
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <div class="footer-content">
+                <p>© 2025 CST Notes - Computer Networks Flashcards</p>
+            </div>
+        </footer>
+
+        <div class="toast-container" id="toast-container">
+            <!-- Toast notifications will be added dynamically -->
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Flashcard data
+            const flashcardsData = [
+                {
+                    id: 1,
+                    question: "What is Frequency Division Multiplexing (FDM)?",
+                    answer: "FDM is a technique that subdivides the available bandwidth of a single transmission medium into several frequency channels, each allocated to different devices."
+                },
+                {
+                    id: 2,
+                    question: "What is the main advantage of FDM?",
+                    answer: "FDM allows a large number of signals to be sent simultaneously, and it is simple and easy to implement."
+                },
+                {
+                    id: 3,
+                    question: "What is the main disadvantage of FDM?",
+                    answer: "FDM requires a high bandwidth channel and is prone to crosstalk."
+                },
+                {
+                    id: 4,
+                    question: "How does Wavelength Division Multiplexing (WDM) differ from FDM?",
+                    answer: "WDM is similar to FDM but uses optical signals transmitted through fiber optics instead of electrical signals."
+                },
+                {
+                    id: 5,
+                    question: "What is Time Division Multiplexing (TDM)?",
+                    answer: "TDM allocates different time slots to different users for data transmission on the same frequency."
+                },
+                {
+                    id: 6,
+                    question: "What is the difference between Synchronous TDM and Asynchronous TDM?",
+                    answer: "Synchronous TDM assigns fixed time slots to devices, while Asynchronous TDM allocates time slots dynamically based on the presence of data."
+                },
+                {
+                    id: 7,
+                    question: "What is the main advantage of TDM?",
+                    answer: "TDM allows multiple signals to share a single communication channel by allocating different time slots."
+                },
+                {
+                    id: 8,
+                    question: "What is the principle of operation for Fiber-Optic Transmission?",
+                    answer: "Fiber-optic transmission uses the bending of light rays to transmit data over long distances."
+                },
+                {
+                    id: 9,
+                    question: "What are the key components of an optical transmission system?",
+                    answer: "The components include the light source, fiber optic cables, and detectors."
+                },
+                {
+                    id: 10,
+                    question: "What is Frequency Hopping Spread Spectrum (FHSS)?",
+                    answer: "FHSS is a technique used in wireless communication where the carrier frequency hops to different frequencies in a pattern."
+                },
+                {
+                    id: 11,
+                    question: "What are the main advantages of Frequency Hopping Spread Spectrum?",
+                    answer: "FHSS reduces interference and enhances security by hopping between frequencies."
+                },
+                {
+                    id: 12,
+                    question: "What does Direct Sequence Spread Spectrum (DSSS) do?",
+                    answer: "DSSS spreads the signal over a wide bandwidth by multiplying the data with a pseudorandom noise sequence."
+                },
+                {
+                    id: 13,
+                    question: "What is the principle of Baseband Transmission?",
+                    answer: "Baseband transmission involves sending digital signals without modulating a carrier wave."
+                },
+                {
+                    id: 14,
+                    question: "What is Amplitude Shift Keying (ASK)?",
+                    answer: "ASK is a digital modulation technique where different amplitudes represent binary values."
+                },
+                {
+                    id: 15,
+                    question: "What is Frequency Shift Keying (FSK)?",
+                    answer: "FSK uses different frequencies to represent binary values."
+                },
+                {
+                    id: 16,
+                    question: "What is Phase Shift Keying (PSK)?",
+                    answer: "PSK modulates the phase of the carrier signal to encode data."
+                },
+                {
+                    id: 17,
+                    question: "What is the role of a multiplexer (MUX) in multiplexing?",
+                    answer: "A multiplexer combines multiple input signals into a single output signal to efficiently use the communication channel."
+                },
+                {
+                    id: 18,
+                    question: "What is the difference between analog and digital multiplexing?",
+                    answer: "Analog multiplexing uses frequency or wavelength, while digital multiplexing combines discrete data streams."
+                },
+                {
+                    id: 19,
+                    question: "What is a common application of FDM?",
+                    answer: "FDM is commonly used in radio and television broadcasting."
+                },
+                {
+                    id: 20,
+                    question: "What is the use of satellites in communication?",
+                    answer: "Satellites amplify and rebroadcast signals, acting as microwave repeaters to facilitate long-distance communication."
+                },
+                {
+                    id: 21,
+                    question: "What is the function of a transponder in a communication satellite?",
+                    answer: "A transponder amplifies and rebroadcasts the signals at different frequencies."
+                },
+                {
+                    id: 22,
+                    question: "How does an artificial satellite differ from a natural satellite in communication?",
+                    answer: "Unlike natural satellites, artificial satellites amplify signals before rebroadcasting."
+                },
+                {
+                    id: 23,
+                    question: "What is Kepler's Law in relation to satellite orbits?",
+                    answer: "Kepler's Law states that the orbital period of a satellite increases with the radius of the orbit."
+                },
+                {
+                    id: 24,
+                    question: "What is the significance of Optical Fiber in communication?",
+                    answer: "Optical fiber offers high data transmission rates with minimal signal loss."
+                },
+                {
+                    id: 25,
+                    question: "What are the main components of a fiber-optic cable?",
+                    answer: "A fiber-optic cable includes the core, cladding, and protective coatings."
+                }
+            ];
+
+            // Flashcard functionality
+            let currentCardIndex = 0;
+            let studyMode = 'all'; // 'all' or 'unknown'
+            let knownCards = new Set();
+            
+            // If stored in local storage, retrieve known cards
+            const storedKnownCards = localStorage.getItem('unit2KnownCards');
+            if (storedKnownCards) {
+                knownCards = new Set(JSON.parse(storedKnownCards));
+                updateProgressBar();
+            }
+            
+            // Get DOM elements
+            const flashcard = document.getElementById('flashcard');
+            const question = document.getElementById('question');
+            const answer = document.getElementById('answer');
+            const cardNumber = document.getElementById('card-number');
+            const cardNumberBack = document.getElementById('card-number-back');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const markKnownBtn = document.getElementById('mark-known-btn');
+            const allCardsBtn = document.getElementById('all-cards-btn');
+            const unknownCardsBtn = document.getElementById('unknown-cards-btn');
+            const progressFill = document.getElementById('progress-fill');
+            const progressText = document.getElementById('progress-text');
+            const cardsCount = document.getElementById('cards-count');
+            
+            // Initialize flashcard
+            updateFlashcard();
+            
+            // Event listeners
+            flashcard.addEventListener('click', flipCard);
+            prevBtn.addEventListener('click', showPreviousCard);
+            nextBtn.addEventListener('click', showNextCard);
+            markKnownBtn.addEventListener('click', markCardAsKnown);
+            allCardsBtn.addEventListener('click', () => setStudyMode('all'));
+            unknownCardsBtn.addEventListener('click', () => setStudyMode('unknown'));
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.key === ' ' || e.key === 'Enter') {
+                    flipCard();
+                } else if (e.key === 'ArrowRight') {
+                    showNextCard();
+                } else if (e.key === 'ArrowLeft') {
+                    showPreviousCard();
+                } else if (e.key === 'k' || e.key === 'K') {
+                    markCardAsKnown();
+                } else if (e.key === 'r' || e.key === 'R') {
+                    resetProgress();
+                }
+            });
+            
+            // Functions
+            function getFilteredCards() {
+                if (studyMode === 'all') {
+                    return flashcardsData;
+                } else {
+                    return flashcardsData.filter(card => !knownCards.has(card.id));
+                }
+            }
+            
+            function getCurrentCard() {
+                const filteredCards = getFilteredCards();
+                return filteredCards[currentCardIndex];
+            }
+            
+            function updateFlashcard() {
+                const filteredCards = getFilteredCards();
+                if (filteredCards.length === 0) {
+                    // No cards to study in 'unknown' mode
+                    showAllCompleteToast();
+                    setStudyMode('all');
+                    return;
+                }
+                
+                const card = getCurrentCard();
+                question.textContent = card.question;
+                answer.textContent = card.answer;
+                
+                const currentPosition = currentCardIndex + 1;
+                const totalCards = filteredCards.length;
+                const cardCountText = `Card ${currentPosition} of ${totalCards}`;
+                
+                cardNumber.textContent = `${currentPosition}/${totalCards}`;
+                cardNumberBack.textContent = `${currentPosition}/${totalCards}`;
+                cardsCount.textContent = cardCountText;
+                
+                // Reset flip state
+                flashcard.classList.remove('flipped');
+                
+                // Update mark as known button
+                if (knownCards.has(card.id)) {
+                    markKnownBtn.innerHTML = '<i class="fas fa-check"></i> Known';
+                    markKnownBtn.classList.remove('btn-primary');
+                    markKnownBtn.classList.add('btn-success');
+                } else {
+                    markKnownBtn.innerHTML = '<i class="fas fa-lightbulb"></i> Mark as Known';
+                    markKnownBtn.classList.remove('btn-success');
+                    markKnownBtn.classList.add('btn-primary');
+                }
+            }
+            
+            function flipCard() {
+                flashcard.classList.toggle('flipped');
+            }
+            
+            function showNextCard() {
+                const filteredCards = getFilteredCards();
+                if (currentCardIndex < filteredCards.length - 1) {
+                    currentCardIndex++;
+                } else {
+                    // Loop back to the first card
+                    currentCardIndex = 0;
+                }
+                updateFlashcard();
+            }
+            
+            function showPreviousCard() {
+                const filteredCards = getFilteredCards();
+                if (currentCardIndex > 0) {
+                    currentCardIndex--;
+                } else {
+                    // Loop to the last card
+                    currentCardIndex = filteredCards.length - 1;
+                }
+                updateFlashcard();
+            }
+            
+            function markCardAsKnown() {
+                const card = getCurrentCard();
+                
+                if (knownCards.has(card.id)) {
+                    // Remove from known cards
+                    knownCards.delete(card.id);
+                    showToast('Card unmarked', 'Card removed from known cards');
+                } else {
+                    // Add to known cards
+                    knownCards.add(card.id);
+                    showToast('Card marked as known', 'Great job! Keep going!');
+                    
+                    // Show confetti for progress milestones
+                    const progress = (knownCards.size / flashcardsData.length) * 100;
+                    if (progress === 100) {
+                        triggerConfetti();
+                        showToast('Congratulations!', 'You\'ve mastered all cards!', 'success');
+                    } else if (progress % 25 === 0) { // At 25%, 50%, 75%
+                        triggerConfetti();
+                        showToast('Progress milestone reached!', `${progress}% of cards mastered!`, 'success');
+                    }
+                    
+                    // Check if all cards in unknown mode are complete
+                    if (studyMode === 'unknown' && getFilteredCards().length === 1) {
+                        showNextCard(); // Move to next card before switching mode
+                        showAllCompleteToast();
+                        setStudyMode('all');
+                        return;
+                    }
+                }
+                
+                // Save known cards to local storage
+                localStorage.setItem('unit2KnownCards', JSON.stringify([...knownCards]));
+                
+                updateProgressBar();
+                updateFlashcard();
+                showNextCard();
+            }
+            
+            function updateProgressBar() {
+                const progress = (knownCards.size / flashcardsData.length) * 100;
+                progressFill.style.width = `${progress}%`;
+                progressText.textContent = `Progress: ${Math.round(progress)}%`;
+            }
+            
+            function setStudyMode(mode) {
+                if (mode === studyMode) return;
+                
+                studyMode = mode;
+                currentCardIndex = 0;
+                
+                // Update UI
+                if (mode === 'all') {
+                    allCardsBtn.classList.add('active');
+                    unknownCardsBtn.classList.remove('active');
+                } else {
+                    allCardsBtn.classList.remove('active');
+                    unknownCardsBtn.classList.add('active');
+                }
+                
+                updateFlashcard();
+            }
+            
+            function resetProgress() {
+                if (confirm('Are you sure you want to reset your progress? This will mark all cards as unknown.')) {
+                    knownCards.clear();
+                    localStorage.removeItem('unit2KnownCards');
+                    updateProgressBar();
+                    updateFlashcard();
+                    showToast('Progress reset', 'All cards have been marked as unknown');
+                }
+            }
+            
+            function showToast(title, message, type = 'info') {
+                const toastContainer = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                
+                let icon = '';
+                switch (type) {
+                    case 'success':
+                        icon = '<i class="fas fa-check-circle toast-icon" style="color: #10b981;"></i>';
+                        break;
+                    case 'warning':
+                        icon = '<i class="fas fa-exclamation-circle toast-icon" style="color: #f59e0b;"></i>';
+                        break;
+                    case 'error':
+                        icon = '<i class="fas fa-times-circle toast-icon" style="color: #ef4444;"></i>';
+                        break;
+                    default:
+                        icon = '<i class="fas fa-info-circle toast-icon"></i>';
+                        break;
+                }
+                
+                toast.innerHTML = `
+                    ${icon}
+                    <div class="toast-content">
+                        <div class="toast-title">${title}</div>
+                        <div class="toast-message">${message}</div>
+                    </div>
+                `;
+                
+                toastContainer.appendChild(toast);
+                
+                // Remove toast after 3 seconds
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateX(100%)';
+                    setTimeout(() => {
+                        toastContainer.removeChild(toast);
+                    }, 300);
+                }, 3000);
+            }
+            
+            function showAllCompleteToast() {
+                showToast('All cards mastered!', 'Switching to all cards mode to review', 'success');
+                triggerConfetti();
+            }
+            
+            function triggerConfetti() {
+                const canvas = document.getElementById('confetti-canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                
+                const confetti = [];
+                const confettiCount = 200;
+                const gravity = 0.5;
+                const terminalVelocity = 5;
+                const drag = 0.075;
+                const colors = [
+                    { front: '#06b6d4', back: '#0e7490' }, // Cyan
+                    { front: '#8b5cf6', back: '#7c3aed' }, // Violet
+                    { front: '#6366f1', back: '#4f46e5' }, // Indigo
+                    { front: '#ec4899', back: '#db2777' }, // Pink
+                    { front: '#10b981', back: '#059669' }  // Emerald
+                ];
+                
+                // Initialize confetti
+                for (let i = 0; i < confettiCount; i++) {
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.push({
+                        color: Math.random() > 0.5 ? color.front : color.back,
+                        dimensions: {
+                            x: Math.random() * 10 + 5,
+                            y: Math.random() * 10 + 10
+                        },
+                        position: {
+                            x: Math.random() * canvas.width,
+                            y: -20
+                        },
+                        rotation: Math.random() * 2 * Math.PI,
+                        scale: { x: 1, y: 1 },
+                        velocity: {
+                            x: Math.random() * 25 - 12.5,
+                            y: Math.random() * 10 + 5
+                        }
+                    });
+                }
+                
+                // Animation loop
+                function renderConfetti() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    let isConfettiActive = false;
+                    
+                    confetti.forEach((confetto, index) => {
+                        let width = confetto.dimensions.x * confetto.scale.x;
+                        let height = confetto.dimensions.y * confetto.scale.y;
+                        
+                        // Move confetto
+                        confetto.velocity.x -= confetto.velocity.x * drag;
+                        confetto.velocity.y = Math.min(confetto.velocity.y + gravity, terminalVelocity);
+                        confetto.position.x += confetto.velocity.x;
+                        confetto.position.y += confetto.velocity.y;
+                        
+                        // Spin confetto
+                        confetto.rotation += 0.01;
+                        
+                        // Draw confetto
+                        ctx.save();
+                        ctx.translate(confetto.position.x, confetto.position.y);
+                        ctx.rotate(confetto.rotation);
+                        
+                        ctx.fillStyle = confetto.color;
+                        ctx.fillRect(-width / 2, -height / 2, width, height);
+                        
+                        ctx.restore();
+                        
+                        // Check if confetto is still visible
+                        if (confetto.position.y < canvas.height) {
+                            isConfettiActive = true;
+                        }
+                    });
+                    
+                    if (isConfettiActive) {
+                        requestAnimationFrame(renderConfetti);
+                    }
+                }
+                
+                renderConfetti();
+            }
+            
+            // Show welcome toast on first visit
+            const hasVisited = localStorage.getItem('unit2Visited');
+            if (!hasVisited) {
+                showToast('Welcome to Unit II', 'Explore the Physical Layer concepts with these flashcards!');
+                localStorage.setItem('unit2Visited', 'true');
+            }
+            
+            // Particle background animation
+            (function initBackground() {
+                const canvas = document.getElementById('particleCanvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Set canvas dimensions
+                function setCanvasDimensions() {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                }
+                
+                setCanvasDimensions();
+                window.addEventListener('resize', setCanvasDimensions);
+                
+                // Create particles
+                const particles = [];
+                const particleCount = Math.min(50, Math.floor(window.innerWidth / 30));
+                
+                // Define colors - unit 2 theme colors
+                const colors = [
+                    'rgba(6, 182, 212, 0.7)',   // Cyan
+                    'rgba(14, 116, 144, 0.7)',  // Cyan darker
+                    'rgba(8, 145, 178, 0.7)',   // Cyan medium
+                    'rgba(6, 182, 212, 0.5)',   // Cyan lighter
+                    'rgba(2, 132, 199, 0.7)',   // Sky blue
+                ];
+                
+                // Initialize particles
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        vx: (Math.random() - 0.5) * 0.5,
+                        vy: (Math.random() - 0.5) * 0.5,
+                        size: Math.random() * 2 + 1,
+                        color: colors[Math.floor(Math.random() * colors.length)],
+                        connections: []
+                    });
+                }
+                
+                // Animation function
+                function animate() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Update and draw particles
+                    for (let i = 0; i < particles.length; i++) {
+                        const particle = particles[i];
+                        
+                        // Update position
+                        particle.x += particle.vx;
+                        particle.y += particle.vy;
+                        
+                        // Bounce off edges
+                        if (particle.x < 0 || particle.x > canvas.width) particle.vx *= -1;
+                        if (particle.y < 0 || particle.y > canvas.height) particle.vy *= -1;
+                        
+                        // Draw particle
+                        ctx.beginPath();
+                        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                        ctx.fillStyle = particle.color;
+                        ctx.fill();
+                        
+                        // Draw connections
+                        particle.connections = [];
+                        for (let j = i + 1; j < particles.length; j++) {
+                            const otherParticle = particles[j];
+                            const dx = particle.x - otherParticle.x;
+                            const dy = particle.y - otherParticle.y;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            
+                            const maxDistance = Math.min(200, canvas.width / 6);
+                            if (distance < maxDistance) {
+                                particle.connections.push(j);
+                                
+                                // Draw connection
+                                ctx.beginPath();
+                                ctx.moveTo(particle.x, particle.y);
+                                ctx.lineTo(otherParticle.x, otherParticle.y);
+                                const opacity = 1 - (distance / maxDistance);
+                                ctx.strokeStyle = `rgba(6, 182, 212, ${opacity * 0.4})`;
+                                ctx.lineWidth = Math.min(2, opacity * 3);
+                                ctx.stroke();
+                            }
+                        }
+                    }
+                    
+                    requestAnimationFrame(animate);
+                }
+                
+                animate();
+            })();
+        });
+    </script>
+</body>
+</html>
