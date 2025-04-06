@@ -1,76 +1,547 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Firebase Auth</title>
-    <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-firestore-compat.js"></script>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin: 50px; }
-        .container { max-width: 400px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
-        input { display: block; width: 100%; margin: 10px 0; padding: 10px; }
-        button { padding: 10px; width: 100%; cursor: pointer; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CST Notes</title>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'auth-accent': '#6366f1',
+            'auth-accent-hover': '#4f46e5',
+            'auth-secondary': '#8b5cf6',
+            'auth-secondary-hover': '#7c3aed',
+            'auth-highlight': '#a855f7'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Base styles */
+    body {
+      background: linear-gradient(to bottom, #0f0f17, #1a1a2e);
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      min-height: 100vh;
+    }
+
+    .glass-card {
+      backdrop-filter: blur(16px);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.3);
+    }
+
+    .text-gradient {
+      background: linear-gradient(to bottom right, #ffffff, rgba(255, 255, 255, 0.7));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .text-gradient-highlight {
+      background: linear-gradient(to right, #6366f1, #8b5cf6, #a855f7);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .animated-gradient-button {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .animated-gradient-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 200%;
+      height: 100%;
+      background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: all 1s ease-in-out;
+    }
+    
+    .animated-gradient-button:hover::before {
+      left: 100%;
+    }
+    
+    .input-glow:focus {
+      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5);
+      border-color: #6366f1;
+      transition: all 0.3s;
+    }
+
+    /* Canvas background */
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -10;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Signup / Login</h2>
-        <input type="email" id="email" placeholder="Enter Email">
-        <input type="password" id="password" placeholder="Enter Password">
-        <button onclick="signUp()">Sign Up</button>
-        <button onclick="login()">Login</button>
-        <button onclick="googleSignIn()">Sign in with Google</button>
-        <p id="message"></p>
+  <canvas id="animatedBackground"></canvas>
+  
+  <div class="min-h-screen flex flex-col items-center justify-center p-4">    
+    <div class="w-full max-w-md z-10">
+      <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold mb-2 text-gradient">
+          CST Notes
+        </h1>
+        <p class="text-gray-400 max-w-md mx-auto">
+          Secure, elegant, and powerful notes revision app exclusively for CST
+        </p>
+      </div>
+      
+      <div class="glass-card w-full max-w-md mx-auto rounded-lg overflow-hidden">
+        <div id="tabs" class="w-full">
+          <div class="flex flex-col">
+            <div class="flex justify-center mb-2 p-6">
+              <div class="grid w-full grid-cols-2 bg-gray-800 rounded-md p-1">
+                <button id="signinTab" class="py-2 px-4 rounded-md active-tab" onclick="switchTab('signin')">Sign In</button>
+                <button id="signupTab" class="py-2 px-4 rounded-md" onclick="switchTab('signup')">Sign Up</button>
+              </div>
+            </div>
+            <div class="text-2xl font-bold text-center text-gradient-highlight px-6">CST Notes</div>
+            <p class="text-center text-gray-300 px-6 mb-4">
+              Secure access to your revision notes
+            </p>
+          </div>
+
+          <div class="p-6 pt-0">
+            <!-- Sign In Form -->
+            <div id="signinContent" class="space-y-4">
+              <div class="space-y-2">
+                <input
+                  id="email"
+                  type="email"
+                  placeholder="Email address"
+                  class="w-full bg-gray-800/50 border border-gray-700 rounded-md px-4 py-2 input-glow"
+                  required
+                />
+              </div>
+              <div class="space-y-2 relative">
+                <input
+                  id="password"
+                  type="password"
+                  placeholder="Password"
+                  class="w-full bg-gray-800/50 border border-gray-700 rounded-md px-4 py-2 pr-10 input-glow"
+                  required
+                />
+                <button
+                  type="button"
+                  id="togglePassword"
+                  class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-200"
+                  onclick="togglePasswordVisibility()"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" x2="22" y1="2" y2="22"></line></svg>
+                </button>
+              </div>
+              <button 
+                onclick="signIn()"
+                class="w-full bg-auth-accent hover:bg-auth-accent-hover text-white px-4 py-2 rounded transition-colors animated-gradient-button"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline mr-2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+                Sign In
+              </button>
+              <div class="relative flex justify-center text-xs uppercase">
+                <span class="bg-gray-800 px-2 text-gray-500 relative z-10">Or continue with</span>
+                <div class="absolute inset-0 flex items-center">
+                  <span class="w-full border-t border-gray-700"></span>
+                </div>
+              </div>
+              <button
+                onclick="signInWithGoogle()"
+                class="w-full border border-gray-700 hover:bg-gray-800/70 text-white px-4 py-2 rounded transition-colors animated-gradient-button"
+              >
+                <svg class="inline mr-2 h-4 w-4" viewBox="0 0 24 24">
+                  <path
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    fill="#4285F4"
+                  />
+                  <path
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    fill="#34A853"
+                  />
+                  <path
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                    fill="#FBBC05"
+                  />
+                  <path
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                    fill="#EA4335"
+                  />
+                </svg>
+                Google
+              </button>
+            </div>
+
+            <!-- Sign Up Form -->
+            <div id="signupContent" class="space-y-4 hidden">
+              <div class="space-y-2">
+                <input
+                  id="emailSignup"
+                  type="email"
+                  placeholder="Email address"
+                  class="w-full bg-gray-800/50 border border-gray-700 rounded-md px-4 py-2 input-glow"
+                  required
+                />
+              </div>
+              <div class="space-y-2 relative">
+                <input
+                  id="passwordSignup"
+                  type="password"
+                  placeholder="Password"
+                  class="w-full bg-gray-800/50 border border-gray-700 rounded-md px-4 py-2 pr-10 input-glow"
+                  required
+                />
+                <button
+                  type="button"
+                  id="togglePasswordSignup"
+                  class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-200"
+                  onclick="togglePasswordVisibilitySignup()"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" x2="22" y1="2" y2="22"></line></svg>
+                </button>
+              </div>
+              <button 
+                onclick="signUp()"
+                class="w-full bg-auth-secondary hover:bg-auth-secondary/90 text-white px-4 py-2 rounded transition-colors animated-gradient-button"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline mr-2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                Create Account
+              </button>
+              <div class="relative flex justify-center text-xs uppercase">
+                <span class="bg-gray-800 px-2 text-gray-500 relative z-10">Or continue with</span>
+                <div class="absolute inset-0 flex items-center">
+                  <span class="w-full border-t border-gray-700"></span>
+                </div>
+              </div>
+              <button
+                onclick="signInWithGoogle()"
+                class="w-full border border-gray-700 hover:bg-gray-800/70 text-white px-4 py-2 rounded transition-colors animated-gradient-button"
+              >
+                <svg class="inline mr-2 h-4 w-4" viewBox="0 0 24 24">
+                  <path
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    fill="#4285F4"
+                  />
+                  <path
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    fill="#34A853"
+                  />
+                  <path
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                    fill="#FBBC05"
+                  />
+                  <path
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                    fill="#EA4335"
+                  />
+                </svg>
+                Google
+              </button>
+            </div>
+          </div>
+          
+          <div class="flex flex-col items-center p-6 pt-0">
+            <p class="mt-2 text-xs text-center text-gray-400">
+              By continuing, you agree to our Terms of Service and Privacy Policy
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-8 text-center text-sm text-gray-500">
+        <p>Powered by Students of CST</p>
+        <div class="flex justify-center space-x-4 mt-4">
+          <div class="flex items-center">
+            <div class="w-2 h-2 rounded-full bg-auth-accent mr-2 animate-pulse"></div>
+            <span>Revision Flashcards</span>
+          </div>
+          <div class="flex items-center">
+            <div class="w-2 h-2 rounded-full bg-auth-highlight mr-2 animate-pulse"></div>
+            <span>Important Questions</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toast notification -->
+      <div id="toast" class="fixed right-4 top-4 max-w-xs bg-white text-gray-800 rounded-lg shadow-lg transition-opacity duration-300 opacity-0 transform translate-y-2 hidden">
+        <div class="flex p-4">
+          <div id="toastIcon" class="flex-shrink-0 text-green-500">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <p id="toastText" class="text-sm font-medium"></p>
+          </div>
+          <button onclick="closeToast()" class="ml-auto -mx-1.5 -my-1.5 text-gray-500 hover:text-gray-700 rounded-lg p-1.5">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
     </div>
-
-    <script>
-        const firebaseConfig = {
-        apiKey: "AIzaSyAZs1VXb5_66-CLdf5SNd5jYButjvvavs0",
-        authDomain: "cst-notes-71801.firebaseapp.com",
-        projectId: "cst-notes-71801",
-        storageBucket: "cst-notes-71801.firebasestorage.app",
-        messagingSenderId: "671538684629",
-        appId: "1:671538684629:web:2cbc10e27d421975acf85c",
-        measurementId: "G-GQ4JV0K0HV"
-        };
+  </div>
+  
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAZs1VXb5_66-CLdf5SNd5jYButjvvavs0",
+      authDomain: "cst-notes-71801.firebaseapp.com",
+      projectId: "cst-notes-71801",
+      storageBucket: "cst-notes-71801.firebasestorage.app",
+      messagingSenderId: "671538684629",
+      appId: "1:671538684629:web:2cbc10e27d421975acf85c",
+      measurementId: "G-GQ4JV0K0HV"
+    };
+    
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    
+    // Tab switching
+    function switchTab(tab) {
+      if (tab === 'signin') {
+        document.getElementById('signinContent').classList.remove('hidden');
+        document.getElementById('signupContent').classList.add('hidden');
+        document.getElementById('signinTab').classList.add('active-tab', 'bg-auth-accent', 'text-white');
+        document.getElementById('signupTab').classList.remove('active-tab', 'bg-auth-accent', 'text-white');
+      } else {
+        document.getElementById('signinContent').classList.add('hidden');
+        document.getElementById('signupContent').classList.remove('hidden');
+        document.getElementById('signinTab').classList.remove('active-tab', 'bg-auth-accent', 'text-white');
+        document.getElementById('signupTab').classList.add('active-tab', 'bg-auth-accent', 'text-white');
+      }
+    }
+    
+    // Toggle password visibility
+    function togglePasswordVisibility() {
+      const passwordInput = document.getElementById('password');
+      const toggleButton = document.getElementById('togglePassword');
+      
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+      } else {
+        passwordInput.type = 'password';
+        toggleButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" x2="22" y1="2" y2="22"></line></svg>';
+      }
+    }
+    
+    function togglePasswordVisibilitySignup() {
+      const passwordInput = document.getElementById('passwordSignup');
+      const toggleButton = document.getElementById('togglePasswordSignup');
+      
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+      } else {
+        passwordInput.type = 'password';
+        toggleButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" x2="22" y1="2" y2="22"></line></svg>';
+      }
+    }
+    
+    // Toast notifications
+    function showToast(message, isSuccess = true) {
+      const toast = document.getElementById('toast');
+      const toastText = document.getElementById('toastText');
+      const toastIcon = document.getElementById('toastIcon');
+      
+      toastText.textContent = message;
+      
+      if (isSuccess) {
+        toastIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
+        toastIcon.className = 'flex-shrink-0 text-green-500';
+      } else {
+        toastIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
+        toastIcon.className = 'flex-shrink-0 text-red-500';
+      }
+      
+      toast.classList.remove('hidden', 'opacity-0', 'translate-y-2');
+      toast.classList.add('opacity-100', 'translate-y-0');
+      
+      // Auto close after 3 seconds
+      setTimeout(() => {
+        closeToast();
+      }, 3000);
+    }
+    
+    function closeToast() {
+      const toast = document.getElementById('toast');
+      toast.classList.add('opacity-0', 'translate-y-2');
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 300);
+    }
+    
+    // Authentication functions
+    function signUp() {
+      const email = document.getElementById('emailSignup').value;
+      const password = document.getElementById('passwordSignup').value;
+      
+      if (!email || !password) {
+        showToast('Please enter both email and password', false);
+        return;
+      }
+      
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(() => {
+          showToast('Account created successfully!');
+          setTimeout(() => {
+            window.location.href = 'dashboard.html';
+          }, 1500);
+        })
+        .catch(error => {
+          showToast(error.message, false);
+        });
+    }
+    
+    function signIn() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      if (!email || !password) {
+        showToast('Please enter both email and password', false);
+        return;
+      }
+      
+      auth.signInWithEmailAndPassword(email, password)
+        .then(() => {
+          showToast('Signed in successfully!');
+          setTimeout(() => {
+            window.location.href = 'dashboard.html';
+          }, 1500);
+        })
+        .catch(error => {
+          showToast(error.message, false);
+        });
+    }
+    
+    function signInWithGoogle() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      
+      auth.signInWithPopup(provider)
+        .then(() => {
+          showToast('Signed in with Google successfully!');
+          setTimeout(() => {
+            window.location.href = 'dashboard.html';
+          }, 1500);
+        })
+        .catch(error => {
+          showToast(error.message, false);
+        });
+    }
+    
+    // Animated Background
+    document.addEventListener('DOMContentLoaded', () => {
+      const canvas = document.getElementById('animatedBackground');
+      const ctx = canvas.getContext('2d');
+      
+      // Set canvas size
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+      
+      // Create points
+      const colors = [
+        'rgba(99, 102, 241, 0.7)',   // Indigo
+        'rgba(139, 92, 246, 0.7)',    // Violet
+        'rgba(79, 70, 229, 0.7)',     // Indigo darker
+        'rgba(67, 56, 202, 0.7)',     // Indigo darkest
+        'rgba(124, 58, 237, 0.7)',    // Violet darker
+      ];
+      
+      const points = [];
+      const numPoints = Math.min(50, Math.floor(window.innerWidth / 30));
+      
+      for (let i = 0; i < numPoints; i++) {
+        points.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          vx: (Math.random() - 0.5) * 0.5,
+          vy: (Math.random() - 0.5) * 0.5,
+          size: Math.random() * 2 + 1,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          connections: []
+        });
+      }
+      
+      // Animation loop
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         
+        // Update and draw points
+        for (let i = 0; i < points.length; i++) {
+          const point = points[i];
+          
+          // Update position
+          point.x += point.vx;
+          point.y += point.vy;
+          
+          // Bounce off edges
+          if (point.x < 0 || point.x > canvas.width) point.vx *= -1;
+          if (point.y < 0 || point.y > canvas.height) point.vy *= -1;
+          
+          // Draw point
+          ctx.beginPath();
+          ctx.arc(point.x, point.y, point.size, 0, Math.PI * 2);
+          ctx.fillStyle = point.color;
+          ctx.fill();
+          
+          // Find and draw connections
+          point.connections = [];
+          for (let j = i + 1; j < points.length; j++) {
+            const otherPoint = points[j];
+            const distance = Math.sqrt(
+              Math.pow(point.x - otherPoint.x, 2) + 
+              Math.pow(point.y - otherPoint.y, 2)
+            );
+            
+            const maxDistance = Math.min(200, canvas.width / 6);
+            if (distance < maxDistance) {
+              point.connections.push(j);
+              
+              // Draw connection
+              ctx.beginPath();
+              ctx.moveTo(point.x, point.y);
+              ctx.lineTo(otherPoint.x, otherPoint.y);
+              const opacity = 1 - (distance / maxDistance);
+              ctx.strokeStyle = `rgba(99, 102, 241, ${opacity * 0.4})`;
+              ctx.lineWidth = Math.min(2, opacity * 3);
+              ctx.stroke();
+            }
+          }
+        }
         
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-
-        function signUp() {
-            const email = document.getElementById("email").value;
-            const password = document.getElementById("password").value;
-            auth.createUserWithEmailAndPassword(email, password)
-                .then(() => {
-                    document.getElementById("message").innerText = "Signup Successful!";
-                    window.location.href = "dashboard.html";
-                })
-                .catch(error => document.getElementById("message").innerText = error.message);
-        }
-
-        function login() {
-            const email = document.getElementById("email").value;
-            const password = document.getElementById("password").value;
-            auth.signInWithEmailAndPassword(email, password)
-                .then(() => {
-                    document.getElementById("message").innerText = "Login Successful!";
-                    window.location.href = "dashboard.html";
-                })
-                .catch(error => document.getElementById("message").innerText = error.message);
-        }
-
-        function googleSignIn() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider)
-                .then(() => {
-                    document.getElementById("message").innerText = "Google Sign-In Successful!";
-                    window.location.href = "dashboard.html";
-                })
-                .catch(error => document.getElementById("message").innerText = error.message);
-        }
-    </script>
+        requestAnimationFrame(animate);
+      }
+      
+      animate();
+      
+      // Initialize active tab
+      document.getElementById('signinTab').classList.add('bg-auth-accent', 'text-white');
+    });
+  </script>
 </body>
 </html>
