@@ -1,547 +1,518 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AuraNexus Authentication</title>
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-  <!-- Tailwind CSS via CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            'auth-accent': '#6366f1',
-            'auth-accent-hover': '#4f46e5',
-            'auth-secondary': '#8b5cf6',
-            'auth-secondary-hover': '#7c3aed',
-            'auth-highlight': '#a855f7'
-          }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Computer Networks Flashcards</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+    <style>
+        /* [Same CSS as before, omitted here for brevity] */
+        :root {
+            --accent-color: #6366f1;
+            --accent-hover: #4f46e5;
+            --secondary-color: #9333ea;
+            --highlight-color: #06b6d4;
+            --bg-gradient: linear-gradient(to bottom, #0f0f17, #1a1a2e);
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-primary: rgba(255, 255, 255, 0.95);
+            --text-secondary: rgba(255, 255, 255, 0.8);
+            --text-muted: rgba(255, 255, 255, 0.6);
+            --shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.3);
+            --transition: all 0.3s ease;
         }
-      }
-    }
-  </script>
-  <style>
-    /* Base styles */
-    body {
-      background: linear-gradient(to bottom, #0f0f17, #1a1a2e);
-      color: #ffffff;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      min-height: 100vh;
-    }
 
-    .glass-card {
-      backdrop-filter: blur(16px);
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.3);
-    }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, sans-serif;
+        }
 
-    .text-gradient {
-      background: linear-gradient(to bottom right, #ffffff, rgba(255, 255, 255, 0.7));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
 
-    .text-gradient-highlight {
-      background: linear-gradient(to right, #6366f1, #8b5cf6, #a855f7);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
+        .wrapper {
+            position: relative;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
 
-    .animated-gradient-button {
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .animated-gradient-button::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 200%;
-      height: 100%;
-      background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.2), transparent);
-      transition: all 1s ease-in-out;
-    }
-    
-    .animated-gradient-button:hover::before {
-      left: 100%;
-    }
-    
-    .input-glow:focus {
-      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5);
-      border-color: #6366f1;
-      transition: all 0.3s;
-    }
+        /* Header Styles */
+        header {
+            border-bottom: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+            background-color: rgba(0, 0, 0, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
 
-    /* Canvas background */
-    canvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: -10;
-    }
-  </style>
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #fff, rgba(255, 255, 255, 0.7));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary);
+        }
+
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            padding: 0.5rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .logout-btn:hover {
+            color: var(--text-primary);
+        }
+
+        /* Main Container */
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 2.5rem;
+            background: linear-gradient(to right, #fff, rgba(255, 255, 255, 0.7));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        /* Units Grid */
+        .units-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .unit-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .unit-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.4);
+        }
+
+        .unit-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .unit-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .unit-title i {
+            color: var(--accent-color);
+        }
+
+        .unit-content {
+            padding: 1.5rem;
+        }
+
+        .unit-description {
+            margin-bottom: 1.25rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .view-unit-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--accent-color);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 0.5rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: var(--transition);
+            width: 100%;
+            justify-content: center;
+        }
+
+        .view-unit-btn:hover {
+            background: rgba(99, 102, 241, 0.25);
+            border-color: rgba(99, 102, 241, 0.5);
+            color: var(--accent-hover);
+        }
+
+        /* Animation for background effect */
+        .animated-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .animated-bg canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .units-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
 </head>
 <body>
-  <canvas id="animatedBackground"></canvas>
-  
-  <div class="min-h-screen flex flex-col items-center justify-center p-4">    
-    <div class="w-full max-w-md z-10">
-      <div class="text-center mb-8">
-        <h1 class="text-4xl font-bold mb-2 text-gradient">
-          AuraNexus Authentication
-        </h1>
-        <p class="text-gray-400 max-w-md mx-auto">
-          Secure, elegant, and powerful authentication for your digital world.
-        </p>
-      </div>
-      
-      <div class="glass-card w-full max-w-md mx-auto rounded-lg overflow-hidden">
-        <div id="tabs" class="w-full">
-          <div class="flex flex-col">
-            <div class="flex justify-center mb-2 p-6">
-              <div class="grid w-full grid-cols-2 bg-gray-800 rounded-md p-1">
-                <button id="signinTab" class="py-2 px-4 rounded-md active-tab" onclick="switchTab('signin')">Sign In</button>
-                <button id="signupTab" class="py-2 px-4 rounded-md" onclick="switchTab('signup')">Sign Up</button>
-              </div>
-            </div>
-            <div class="text-2xl font-bold text-center text-gradient-highlight px-6">AuraNexus</div>
-            <p class="text-center text-gray-300 px-6 mb-4">
-              Secure access to your cloud services
-            </p>
-          </div>
+    <div class="wrapper">
+        <div class="animated-bg">
+            <canvas id="particleCanvas"></canvas>
+        </div>
 
-          <div class="p-6 pt-0">
-            <!-- Sign In Form -->
-            <div id="signinContent" class="space-y-4">
-              <div class="space-y-2">
-                <input
-                  id="email"
-                  type="email"
-                  placeholder="Email address"
-                  class="w-full bg-gray-800/50 border border-gray-700 rounded-md px-4 py-2 input-glow"
-                  required
-                />
-              </div>
-              <div class="space-y-2 relative">
-                <input
-                  id="password"
-                  type="password"
-                  placeholder="Password"
-                  class="w-full bg-gray-800/50 border border-gray-700 rounded-md px-4 py-2 pr-10 input-glow"
-                  required
-                />
-                <button
-                  type="button"
-                  id="togglePassword"
-                  class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-200"
-                  onclick="togglePasswordVisibility()"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" x2="22" y1="2" y2="22"></line></svg>
-                </button>
-              </div>
-              <button 
-                onclick="signIn()"
-                class="w-full bg-auth-accent hover:bg-auth-accent-hover text-white px-4 py-2 rounded transition-colors animated-gradient-button"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline mr-2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
-                Sign In
-              </button>
-              <div class="relative flex justify-center text-xs uppercase">
-                <span class="bg-gray-800 px-2 text-gray-500 relative z-10">Or continue with</span>
-                <div class="absolute inset-0 flex items-center">
-                  <span class="w-full border-t border-gray-700"></span>
+        <header>
+            <div class="header-content">
+                <h1 class="logo">CST Notes</h1>
+                <div class="nav-links">
+                    <a href="dashboard.html" class="nav-link">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a>
                 </div>
-              </div>
-              <button
-                onclick="signInWithGoogle()"
-                class="w-full border border-gray-700 hover:bg-gray-800/70 text-white px-4 py-2 rounded transition-colors animated-gradient-button"
-              >
-                <svg class="inline mr-2 h-4 w-4" viewBox="0 0 24 24">
-                  <path
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    fill="#4285F4"
-                  />
-                  <path
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    fill="#34A853"
-                  />
-                  <path
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                    fill="#FBBC05"
-                  />
-                  <path
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                    fill="#EA4335"
-                  />
-                </svg>
-                Google
-              </button>
-            </div>
-
-            <!-- Sign Up Form -->
-            <div id="signupContent" class="space-y-4 hidden">
-              <div class="space-y-2">
-                <input
-                  id="emailSignup"
-                  type="email"
-                  placeholder="Email address"
-                  class="w-full bg-gray-800/50 border border-gray-700 rounded-md px-4 py-2 input-glow"
-                  required
-                />
-              </div>
-              <div class="space-y-2 relative">
-                <input
-                  id="passwordSignup"
-                  type="password"
-                  placeholder="Password"
-                  class="w-full bg-gray-800/50 border border-gray-700 rounded-md px-4 py-2 pr-10 input-glow"
-                  required
-                />
-                <button
-                  type="button"
-                  id="togglePasswordSignup"
-                  class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-200"
-                  onclick="togglePasswordVisibilitySignup()"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" x2="22" y1="2" y2="22"></line></svg>
+                <button class="logout-btn" onclick="alert('Signing out...')">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Sign Out</span>
                 </button>
-              </div>
-              <button 
-                onclick="signUp()"
-                class="w-full bg-auth-secondary hover:bg-auth-secondary/90 text-white px-4 py-2 rounded transition-colors animated-gradient-button"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline mr-2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                Create Account
-              </button>
-              <div class="relative flex justify-center text-xs uppercase">
-                <span class="bg-gray-800 px-2 text-gray-500 relative z-10">Or continue with</span>
-                <div class="absolute inset-0 flex items-center">
-                  <span class="w-full border-t border-gray-700"></span>
-                </div>
-              </div>
-              <button
-                onclick="signInWithGoogle()"
-                class="w-full border border-gray-700 hover:bg-gray-800/70 text-white px-4 py-2 rounded transition-colors animated-gradient-button"
-              >
-                <svg class="inline mr-2 h-4 w-4" viewBox="0 0 24 24">
-                  <path
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    fill="#4285F4"
-                  />
-                  <path
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    fill="#34A853"
-                  />
-                  <path
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                    fill="#FBBC05"
-                  />
-                  <path
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                    fill="#EA4335"
-                  />
-                </svg>
-                Google
-              </button>
             </div>
-          </div>
-          
-          <div class="flex flex-col items-center p-6 pt-0">
-            <p class="mt-2 text-xs text-center text-gray-400">
-              By continuing, you agree to our Terms of Service and Privacy Policy
-            </p>
-          </div>
-        </div>
-      </div>
+        </header>
 
-      <div class="mt-8 text-center text-sm text-gray-500">
-        <p>Powered by modern security protocols</p>
-        <div class="flex justify-center space-x-4 mt-4">
-          <div class="flex items-center">
-            <div class="w-2 h-2 rounded-full bg-auth-accent mr-2 animate-pulse"></div>
-            <span>Real-time Protection</span>
-          </div>
-          <div class="flex items-center">
-            <div class="w-2 h-2 rounded-full bg-auth-highlight mr-2 animate-pulse"></div>
-            <span>End-to-End Encryption</span>
-          </div>
-        </div>
-      </div>
+        <main>
+            <h2 class="page-title">Computer Networks Flashcards</h2>
 
-      <!-- Toast notification -->
-      <div id="toast" class="fixed right-4 top-4 max-w-xs bg-white text-gray-800 rounded-lg shadow-lg transition-opacity duration-300 opacity-0 transform translate-y-2 hidden">
-        <div class="flex p-4">
-          <div id="toastIcon" class="flex-shrink-0 text-green-500">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <div class="ml-3">
-            <p id="toastText" class="text-sm font-medium"></p>
-          </div>
-          <button onclick="closeToast()" class="ml-auto -mx-1.5 -my-1.5 text-gray-500 hover:text-gray-700 rounded-lg p-1.5">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  <script>
-    // Firebase config
-    const firebaseConfig = {
-      apiKey: "AIzaSyAZs1VXb5_66-CLdf5SNd5jYButjvvavs0",
-      authDomain: "cst-notes-71801.firebaseapp.com",
-      projectId: "cst-notes-71801",
-      storageBucket: "cst-notes-71801.firebasestorage.app",
-      messagingSenderId: "671538684629",
-      appId: "1:671538684629:web:2cbc10e27d421975acf85c",
-      measurementId: "G-GQ4JV0K0HV"
-    };
-    
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    
-    // Tab switching
-    function switchTab(tab) {
-      if (tab === 'signin') {
-        document.getElementById('signinContent').classList.remove('hidden');
-        document.getElementById('signupContent').classList.add('hidden');
-        document.getElementById('signinTab').classList.add('active-tab', 'bg-auth-accent', 'text-white');
-        document.getElementById('signupTab').classList.remove('active-tab', 'bg-auth-accent', 'text-white');
-      } else {
-        document.getElementById('signinContent').classList.add('hidden');
-        document.getElementById('signupContent').classList.remove('hidden');
-        document.getElementById('signinTab').classList.remove('active-tab', 'bg-auth-accent', 'text-white');
-        document.getElementById('signupTab').classList.add('active-tab', 'bg-auth-accent', 'text-white');
-      }
-    }
-    
-    // Toggle password visibility
-    function togglePasswordVisibility() {
-      const passwordInput = document.getElementById('password');
-      const toggleButton = document.getElementById('togglePassword');
-      
-      if (passwordInput.type === 'password') {
-        passwordInput.type = 'text';
-        toggleButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
-      } else {
-        passwordInput.type = 'password';
-        toggleButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" x2="22" y1="2" y2="22"></line></svg>';
-      }
-    }
-    
-    function togglePasswordVisibilitySignup() {
-      const passwordInput = document.getElementById('passwordSignup');
-      const toggleButton = document.getElementById('togglePasswordSignup');
-      
-      if (passwordInput.type === 'password') {
-        passwordInput.type = 'text';
-        toggleButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
-      } else {
-        passwordInput.type = 'password';
-        toggleButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" x2="22" y1="2" y2="22"></line></svg>';
-      }
-    }
-    
-    // Toast notifications
-    function showToast(message, isSuccess = true) {
-      const toast = document.getElementById('toast');
-      const toastText = document.getElementById('toastText');
-      const toastIcon = document.getElementById('toastIcon');
-      
-      toastText.textContent = message;
-      
-      if (isSuccess) {
-        toastIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
-        toastIcon.className = 'flex-shrink-0 text-green-500';
-      } else {
-        toastIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
-        toastIcon.className = 'flex-shrink-0 text-red-500';
-      }
-      
-      toast.classList.remove('hidden', 'opacity-0', 'translate-y-2');
-      toast.classList.add('opacity-100', 'translate-y-0');
-      
-      // Auto close after 3 seconds
-      setTimeout(() => {
-        closeToast();
-      }, 3000);
-    }
-    
-    function closeToast() {
-      const toast = document.getElementById('toast');
-      toast.classList.add('opacity-0', 'translate-y-2');
-      setTimeout(() => {
-        toast.classList.add('hidden');
-      }, 300);
-    }
-    
-    // Authentication functions
-    function signUp() {
-      const email = document.getElementById('emailSignup').value;
-      const password = document.getElementById('passwordSignup').value;
-      
-      if (!email || !password) {
-        showToast('Please enter both email and password', false);
-        return;
-      }
-      
-      auth.createUserWithEmailAndPassword(email, password)
-        .then(() => {
-          showToast('Account created successfully!');
-          setTimeout(() => {
-            window.location.href = 'dashboard.html';
-          }, 1500);
-        })
-        .catch(error => {
-          showToast(error.message, false);
-        });
-    }
-    
-    function signIn() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      
-      if (!email || !password) {
-        showToast('Please enter both email and password', false);
-        return;
-      }
-      
-      auth.signInWithEmailAndPassword(email, password)
-        .then(() => {
-          showToast('Signed in successfully!');
-          setTimeout(() => {
-            window.location.href = 'dashboard.html';
-          }, 1500);
-        })
-        .catch(error => {
-          showToast(error.message, false);
-        });
-    }
-    
-    function signInWithGoogle() {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      
-      auth.signInWithPopup(provider)
-        .then(() => {
-          showToast('Signed in with Google successfully!');
-          setTimeout(() => {
-            window.location.href = 'dashboard.html';
-          }, 1500);
-        })
-        .catch(error => {
-          showToast(error.message, false);
-        });
-    }
-    
-    // Animated Background
-    document.addEventListener('DOMContentLoaded', () => {
-      const canvas = document.getElementById('animatedBackground');
-      const ctx = canvas.getContext('2d');
-      
-      // Set canvas size
-      function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-      }
-      
-      window.addEventListener('resize', resizeCanvas);
-      resizeCanvas();
-      
-      // Create points
-      const colors = [
-        'rgba(99, 102, 241, 0.7)',   // Indigo
-        'rgba(139, 92, 246, 0.7)',    // Violet
-        'rgba(79, 70, 229, 0.7)',     // Indigo darker
-        'rgba(67, 56, 202, 0.7)',     // Indigo darkest
-        'rgba(124, 58, 237, 0.7)',    // Violet darker
-      ];
-      
-      const points = [];
-      const numPoints = Math.min(50, Math.floor(window.innerWidth / 30));
-      
-      for (let i = 0; i < numPoints; i++) {
-        points.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          vx: (Math.random() - 0.5) * 0.5,
-          vy: (Math.random() - 0.5) * 0.5,
-          size: Math.random() * 2 + 1,
-          color: colors[Math.floor(Math.random() * colors.length)],
-          connections: []
-        });
-      }
-      
-      // Animation loop
-      function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // Update and draw points
-        for (let i = 0; i < points.length; i++) {
-          const point = points[i];
-          
-          // Update position
-          point.x += point.vx;
-          point.y += point.vy;
-          
-          // Bounce off edges
-          if (point.x < 0 || point.x > canvas.width) point.vx *= -1;
-          if (point.y < 0 || point.y > canvas.height) point.vy *= -1;
-          
-          // Draw point
-          ctx.beginPath();
-          ctx.arc(point.x, point.y, point.size, 0, Math.PI * 2);
-          ctx.fillStyle = point.color;
-          ctx.fill();
-          
-          // Find and draw connections
-          point.connections = [];
-          for (let j = i + 1; j < points.length; j++) {
-            const otherPoint = points[j];
-            const distance = Math.sqrt(
-              Math.pow(point.x - otherPoint.x, 2) + 
-              Math.pow(point.y - otherPoint.y, 2)
-            );
-            
-            const maxDistance = Math.min(200, canvas.width / 6);
-            if (distance < maxDistance) {
-              point.connections.push(j);
+            <div class="units-grid">
+                <!-- Unit Cards: [Same HTML as before, omitted for brevity] -->
+                <div class="unit-card">
+                  <div class="unit-header">
+                      <div class="unit-title">
+                          <i class="fas fa-network-wired"></i>
+                          <span>UNIT – I Introduction</span>
+                      </div>
+                  </div>
+                  <div class="unit-content">
+                      <p class="unit-description">
+                          Uses of Computer Networks, Types of Computer Networks ,Network Technology, from Local to Global,
+Examples of Networks , Network Protocols, Reference Models , Standardization
+                      </p>
+                      <a href="unit1-networks.html" class="view-unit-btn">
+                          <i class="fas fa-book-open"></i>
+                          <span>View Flashcards</span>
+                      </a>
+                  </div>
+              </div>
               
-              // Draw connection
-              ctx.beginPath();
-              ctx.moveTo(point.x, point.y);
-              ctx.lineTo(otherPoint.x, otherPoint.y);
-              const opacity = 1 - (distance / maxDistance);
-              ctx.strokeStyle = `rgba(99, 102, 241, ${opacity * 0.4})`;
-              ctx.lineWidth = Math.min(2, opacity * 3);
-              ctx.stroke();
-            }
-          }
+              <!-- Unit 2 -->
+              <div class="unit-card">
+                  <div class="unit-header">
+                      <div class="unit-title">
+                          <i class="fas fa-microchip"></i>
+                          <span>UNIT – II The Physical Layer</span>
+                      </div>
+                  </div>
+                  <div class="unit-content">
+                      <p class="unit-description">
+                          Guided Transmission Media, Wireless Transmission, Using the Spectrum for Transmission, From
+Waveforms to Bits, Communication Satellites.
+                      </p>
+                      <a href="unit2-networks.html" class="view-unit-btn">
+                          <i class="fas fa-book-open"></i>
+                          <span>View Flashcards</span>
+                      </a>
+                  </div>
+              </div>
+              
+              <!-- Unit 3 -->
+              <div class="unit-card">
+                  <div class="unit-header">
+                      <div class="unit-title">
+                          <i class="fas fa-link"></i>
+                          <span>UNIT – III The Data Link Layer and Medium Access Control</span>
+                      </div>
+                  </div>
+                  <div class="unit-content">
+                      <p class="unit-description">
+                          Data Link Layer Design Issues, Error Detection and Correction , ElementaryData Link Protocols , Improving
+Efficiency
+                      </p>
+                      <a href="unit3-networks.html" class="view-unit-btn">
+                          <i class="fas fa-book-open"></i>
+                          <span>View Flashcards</span>
+                      </a>
+                  </div>
+              </div>
+              
+              <!-- Unit 4 -->
+              <div class="unit-card">
+                  <div class="unit-header">
+                      <div class="unit-title">
+                          <i class="fas fa-route"></i>
+                          <span>UNIT – IV The Network Layer</span>
+                      </div>
+                  </div>
+                  <div class="unit-content">
+                      <p class="unit-description">
+                          Network Layer Design Issues, Routing Algorithms in a Single Network, The Network Layer in the Internet
+                      </p>
+                      <a href="unit4-networks.html" class="view-unit-btn">
+                          <i class="fas fa-book-open"></i>
+                          <span>View Flashcards</span>
+                      </a>
+                  </div>
+              </div>
+              
+              <!-- Unit 5 -->
+              <div class="unit-card">
+                  <div class="unit-header">
+                      <div class="unit-title">
+                          <i class="fas fa-layer-group"></i>
+                          <span>UNIT – V Transport & Application Layers</span>
+                      </div>
+                  </div>
+                  <div class="unit-content">
+                      <p class="unit-description">
+                          DNS — The Domain Name System , Electronic Mail , WWW, Streaming Audio and Video
+                      </p>
+                      <a href="unit5-networks.html" class="view-unit-btn">
+                          <i class="fas fa-book-open"></i>
+                          <span>View Flashcards</span>
+                      </a>
+                  </div>
+              </div>
+          </div>
+            </div>
+
+            <h3 class="page-title">User Analytics</h3>
+            <canvas id="eventChart" width="600" height="300"></canvas>
+            <canvas id="variantChart" width="600" height="300"></canvas>
+        </main>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAZs1VXb5_66-CLdf5SNd5jYButjvvavs0",
+            authDomain: "cst-notes-71801.firebaseapp.com",
+            projectId: "cst-notes-71801",
+            storageBucket: "cst-notes-71801.appspot.com",
+            messagingSenderId: "671538684629",
+            appId: "1:671538684629:web:2cbc10e27d421975acf85c",
+            measurementId: "G-GQ4JV0K0HV"
+        };
+
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        async function loadAnalytics() {
+            const snapshot = await db.collection("analytics").get();
+            const data = snapshot.docs.map(doc => doc.data());
+
+            const eventCounts = {};
+            const variantCounts = { A: 0, B: 0 };
+
+            data.forEach(entry => {
+                eventCounts[entry.event] = (eventCounts[entry.event] || 0) + 1;
+                if (entry.variant) variantCounts[entry.variant]++;
+            });
+
+            const eventCtx = document.getElementById('eventChart').getContext('2d');
+            new Chart(eventCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(eventCounts),
+                    datasets: [{
+                        label: 'Event Count',
+                        data: Object.values(eventCounts),
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)'
+                    }]
+                }
+            });
+
+            const variantCtx = document.getElementById('variantChart').getContext('2d');
+            new Chart(variantCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Variant A', 'Variant B'],
+                    datasets: [{
+                        label: 'Variant Split',
+                        data: [variantCounts.A, variantCounts.B],
+                        backgroundColor: ['#4CAF50', '#F44336']
+                    }]
+                }
+            });
         }
-        
-        requestAnimationFrame(animate);
-      }
-      
-      animate();
-      
-      // Initialize active tab
-      document.getElementById('signinTab').classList.add('bg-auth-accent', 'text-white');
-    });
-  </script>
+
+        loadAnalytics();
+    </script>
+
+    <script>
+        // [Same particle animation script as before, omitted for brevity]
+        // Particle animation for the background
+        document.addEventListener('DOMContentLoaded', function() {
+            const canvas = document.getElementById('particleCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas dimensions
+            function setCanvasDimensions() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            
+            setCanvasDimensions();
+            window.addEventListener('resize', setCanvasDimensions);
+            
+            // Create particles
+            const particles = [];
+            const particleCount = Math.min(50, Math.floor(window.innerWidth / 30));
+            
+            // Define colors
+            const colors = [
+                'rgba(99, 102, 241, 0.7)',  // Indigo
+                'rgba(139, 92, 246, 0.7)',  // Violet
+                'rgba(79, 70, 229, 0.7)',   // Indigo darker
+                'rgba(67, 56, 202, 0.7)',   // Indigo darkest
+                'rgba(124, 58, 237, 0.7)',  // Violet darker
+            ];
+            
+            // Initialize particles
+            for (let i = 0; i < particleCount; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: (Math.random() - 0.5) * 0.5,
+                    size: Math.random() * 2 + 1,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    connections: []
+                });
+            }
+            
+            // Animation function
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Update and draw particles
+                for (let i = 0; i < particles.length; i++) {
+                    const particle = particles[i];
+                    
+                    // Update position
+                    particle.x += particle.vx;
+                    particle.y += particle.vy;
+                    
+                    // Bounce off edges
+                    if (particle.x < 0 || particle.x > canvas.width) particle.vx *= -1;
+                    if (particle.y < 0 || particle.y > canvas.height) particle.vy *= -1;
+                    
+                    // Draw particle
+                    ctx.beginPath();
+                    ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                    ctx.fillStyle = particle.color;
+                    ctx.fill();
+                    
+                    // Draw connections
+                    particle.connections = [];
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const otherParticle = particles[j];
+                        const dx = particle.x - otherParticle.x;
+                        const dy = particle.y - otherParticle.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        const maxDistance = Math.min(200, canvas.width / 6);
+                        if (distance < maxDistance) {
+                            particle.connections.push(j);
+                            
+                            // Draw connection
+                            ctx.beginPath();
+                            ctx.moveTo(particle.x, particle.y);
+                            ctx.lineTo(otherParticle.x, otherParticle.y);
+                            const opacity = 1 - (distance / maxDistance);
+                            ctx.strokeStyle = `rgba(99, 102, 241, ${opacity * 0.4})`;
+                            ctx.lineWidth = Math.min(2, opacity * 3);
+                            ctx.stroke();
+                        }
+                    }
+                }
+                
+                requestAnimationFrame(animate);
+            }
+            
+            animate();
+        });
+    </script>
 </body>
 </html>

@@ -1,14 +1,63 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CST Notes Dashboard</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
-    <style>
-        :root {
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CST Notes Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"/>
+
+  <!-- Firebase SDKs -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAZs1VXb5_66-CLdf5SNd5jYButjvvavs0",
+      authDomain: "cst-notes-71801.firebaseapp.com",
+      projectId: "cst-notes-71801",
+      storageBucket: "cst-notes-71801.appspot.com",
+      messagingSenderId: "671538684629",
+      appId: "1:671538684629:web:2cbc10e27d421975acf85c",
+      measurementId: "G-GQ4JV0K0HV"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.logEvent = async function(eventType) {
+      let userId = sessionStorage.getItem("user_id");
+      if (!userId) {
+        userId = "guest_" + Math.floor(Math.random() * 1000000);
+        sessionStorage.setItem("user_id", userId);
+      }
+
+      let variant = sessionStorage.getItem("variant");
+      if (!variant) {
+        variant = Math.random() < 0.5 ? "A" : "B";
+        sessionStorage.setItem("variant", variant);
+      }
+
+      try {
+        await addDoc(collection(db, "analytics"), {
+          user_id: userId,
+          event: eventType,
+          variant: variant,
+          timestamp: serverTimestamp()
+        });
+        console.log("✅ Event logged:", eventType);
+      } catch (err) {
+        console.error("❌ Error logging event:", err);
+      }
+    };
+
+    // Auto-log page load event
+    window.addEventListener("load", () => logEvent("dashboard_page_view"));
+  </script>
+
+  <style>
+    /* your full CSS unchanged — paste the same CSS block here from your current version */
+    :root {
             --accent-color: #6366f1;
             --accent-hover: #4f46e5;
             --secondary-color: #9333ea;
@@ -213,175 +262,77 @@
                 grid-template-columns: 1fr;
             }
         }
-    </style>
+  </style>
 </head>
+
 <body>
-    <div class="wrapper">
-        <div class="animated-bg">
-            <canvas id="particleCanvas"></canvas>
+  <div class="wrapper">
+    <header>
+      <div class="header-content">
+        <h1 class="logo">CST Notes</h1>
+        <button class="logout-btn" onclick="logEvent('sign_out_click'); alert('Signing out...')">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Sign Out</span>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <h2 class="dashboard-title">Dashboard</h2>
+      <div class="cards-grid">
+        <!-- Important Questions Card -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="fas fa-question-circle"></i>
+              <span>Important Questions</span>
+            </div>
+          </div>
+          <div class="card-content">
+            <ul class="links-list">
+              <li class="link-item">
+                <a href="networks.html" onclick="logEvent('visited_questions_networks')">
+                  <i class="fas fa-network-wired"></i>
+                  <span class="link-title">Introduction to Computer Networks</span>
+                </a>
+              </li>
+              <li class="link-item">
+                <a href="supply-chain.html" onclick="logEvent('visited_questions_supply_chain')">
+                  <i class="fas fa-truck"></i>
+                  <span class="link-title">Supply Chain Management and Logistics</span>
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
 
-        <header>
-            <div class="header-content">
-                <h1 class="logo">CST Notes</h1>
-                <button class="logout-btn" onclick="alert('Signing out...')">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Sign Out</span>
-                </button>
+        <!-- Flashcards Card -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="fas fa-book-open"></i>
+              <span>Revision Flashcards</span>
             </div>
-        </header>
-
-        <main>
-            <h2 class="dashboard-title">Dashboard</h2>
-
-            <div class="cards-grid">
-                <!-- Important Questions Card -->
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">
-                            <i class="fas fa-question-circle"></i>
-                            <span>Important Questions</span>
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        <ul class="links-list">
-                            <li class="link-item">
-                                <a href="networks.html" class="link">
-                                    <i class="fas fa-network-wired"></i>
-                                    <span class="link-title">Introduction to Computer Networks</span>
-                                </a>
-                            </li>
-                            <li class="link-item">
-                                <a href="supply-chain.html" class="link">
-                                    <i class="fas fa-truck"></i>
-                                    <span class="link-title">Supply Chain Management and Logistics</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <!-- Revision Flashcards Card -->
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">
-                            <i class="fas fa-book-open"></i>
-                            <span>Revision Flashcards</span>
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        <ul class="links-list">
-                            <li class="link-item">
-                                <a href="networks-flashcards.html" class="link">
-                                    <i class="fas fa-network-wired"></i>
-                                    <span class="link-title">Introduction to Computer Networks</span>
-                                </a>
-                            </li>
-                            <li class="link-item">
-                                <a href="supply-chain-flashcards.html" class="link">
-                                    <i class="fas fa-truck"></i>
-                                    <span class="link-title">Supply Chain Management and Logistics</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <script>
-        // Particle animation for the background
-        document.addEventListener('DOMContentLoaded', function() {
-            const canvas = document.getElementById('particleCanvas');
-            const ctx = canvas.getContext('2d');
-            
-            // Set canvas dimensions
-            function setCanvasDimensions() {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-            }
-            
-            setCanvasDimensions();
-            window.addEventListener('resize', setCanvasDimensions);
-            
-            // Create particles
-            const particles = [];
-            const particleCount = Math.min(50, Math.floor(window.innerWidth / 30));
-            
-            // Define colors
-            const colors = [
-                'rgba(99, 102, 241, 0.7)',  // Indigo
-                'rgba(139, 92, 246, 0.7)',  // Violet
-                'rgba(79, 70, 229, 0.7)',   // Indigo darker
-                'rgba(67, 56, 202, 0.7)',   // Indigo darkest
-                'rgba(124, 58, 237, 0.7)',  // Violet darker
-            ];
-            
-            // Initialize particles
-            for (let i = 0; i < particleCount; i++) {
-                particles.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    vx: (Math.random() - 0.5) * 0.5,
-                    vy: (Math.random() - 0.5) * 0.5,
-                    size: Math.random() * 2 + 1,
-                    color: colors[Math.floor(Math.random() * colors.length)],
-                    connections: []
-                });
-            }
-            
-            // Animation function
-            function animate() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                
-                // Update and draw particles
-                for (let i = 0; i < particles.length; i++) {
-                    const particle = particles[i];
-                    
-                    // Update position
-                    particle.x += particle.vx;
-                    particle.y += particle.vy;
-                    
-                    // Bounce off edges
-                    if (particle.x < 0 || particle.x > canvas.width) particle.vx *= -1;
-                    if (particle.y < 0 || particle.y > canvas.height) particle.vy *= -1;
-                    
-                    // Draw particle
-                    ctx.beginPath();
-                    ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-                    ctx.fillStyle = particle.color;
-                    ctx.fill();
-                    
-                    // Draw connections
-                    particle.connections = [];
-                    for (let j = i + 1; j < particles.length; j++) {
-                        const otherParticle = particles[j];
-                        const dx = particle.x - otherParticle.x;
-                        const dy = particle.y - otherParticle.y;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
-                        
-                        const maxDistance = Math.min(200, canvas.width / 6);
-                        if (distance < maxDistance) {
-                            particle.connections.push(j);
-                            
-                            // Draw connection
-                            ctx.beginPath();
-                            ctx.moveTo(particle.x, particle.y);
-                            ctx.lineTo(otherParticle.x, otherParticle.y);
-                            const opacity = 1 - (distance / maxDistance);
-                            ctx.strokeStyle = `rgba(99, 102, 241, ${opacity * 0.4})`;
-                            ctx.lineWidth = Math.min(2, opacity * 3);
-                            ctx.stroke();
-                        }
-                    }
-                }
-                
-                requestAnimationFrame(animate);
-            }
-            
-            animate();
-        });
-    </script>
+          </div>
+          <div class="card-content">
+            <ul class="links-list">
+              <li class="link-item">
+                <a href="networks-flashcards.html" onclick="logEvent('viewed_flashcards_networks')">
+                  <i class="fas fa-network-wired"></i>
+                  <span class="link-title">Introduction to Computer Networks</span>
+                </a>
+              </li>
+              <li class="link-item">
+                <a href="supply-chain-flashcards.html" onclick="logEvent('viewed_flashcards_supply_chain')">
+                  <i class="fas fa-truck"></i>
+                  <span class="link-title">Supply Chain Management and Logistics</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
 </body>
 </html>

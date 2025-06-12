@@ -2,1399 +2,572 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unit II - The Physical Layer</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
-    <style>
-        :root {
-            --accent-color: #6366f1;
-            --accent-hover: #4f46e5;
-            --secondary-color: #9333ea;
-            --highlight-color: #06b6d4;
-            --bg-gradient: linear-gradient(to bottom, #0f0f17, #1a1a2e);
-            --card-bg: rgba(255, 255, 255, 0.05);
-            --border-color: rgba(255, 255, 255, 0.1);
-            --text-primary: rgba(255, 255, 255, 0.95);
-            --text-secondary: rgba(255, 255, 255, 0.8);
-            --text-muted: rgba(255, 255, 255, 0.6);
-            --shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.3);
-            --transition: all 0.3s ease;
-            
-            /* Chatbot specific colors */
-            --chatbot-gradient: linear-gradient(135deg, #06b6d4, #8B5CF6);
-            --chatbot-header: linear-gradient(135deg, #06b6d4, #8B5CF6);
-            --chatbot-bg: rgba(15, 15, 23, 0.95);
-            --chatbot-border: rgba(99, 102, 241, 0.3);
-            --chatbot-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', system-ui, sans-serif;
-        }
-
-        body {
-            background: var(--bg-gradient);
-            color: var(--text-primary);
-            min-height: 100vh;
-            line-height: 1.6;
-        }
-
-        .wrapper {
-            position: relative;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        /* Header Styles */
-        header {
-            border-bottom: 1px solid var(--border-color);
-            backdrop-filter: blur(10px);
-            background-color: rgba(0, 0, 0, 0.3);
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        .header-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: linear-gradient(to right, #fff, rgba(255, 255, 255, 0.7));
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 1rem;
-        }
-
-        .nav-link {
-            color: var(--text-secondary);
-            text-decoration: none;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-        }
-
-        .nav-link:hover {
-            color: var(--text-primary);
-        }
-
-        .logout-btn {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            padding: 0.5rem;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .logout-btn:hover {
-            color: var(--text-primary);
-        }
-
-        /* Main Container */
-        main {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem 1rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        .page-title {
-            font-size: 2rem;
-            font-weight: 700;
-            text-align: center;
-            margin-bottom: 1rem;
-            background: linear-gradient(to right, #fff, rgba(255, 255, 255, 0.7));
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
-        .page-subtitle {
-            text-align: center;
-            color: var(--text-secondary);
-            margin-bottom: 2.5rem;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        
-        /* Chatbot Styles - Enhanced */
-        .chatbot-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 1000;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        .chatbot-button {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: var(--chatbot-gradient);
-            box-shadow: 0 4px 20px rgba(6, 182, 212, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative;
-            z-index: 1001;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .chatbot-button:hover {
-            transform: scale(1.1) rotate(5deg);
-            box-shadow: 0 6px 24px rgba(6, 182, 212, 0.4);
-        }
-
-        .chatbot-icon {
-            color: white;
-            font-size: 24px;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-        }
-
-        .chatbot-panel {
-            position: absolute;
-            bottom: 70px;
-            right: 0;
-            width: 360px;
-            height: 520px;
-            background: var(--chatbot-bg);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            box-shadow: var(--chatbot-shadow);
-            overflow: hidden;
-            display: none;
-            transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
-            transform: translateY(20px);
-            opacity: 0;
-            border: 1px solid var(--chatbot-border);
-        }
-
-        .chatbot-panel.active {
-            display: block;
-            transform: translateY(0);
-            opacity: 1;
-        }
-
-        .chatbot-header {
-            background: var(--chatbot-header);
-            padding: 16px 20px;
-            color: white;
-            font-weight: 600;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .chatbot-header-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 1.1rem;
-            letter-spacing: 0.5px;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-        }
-
-        .chatbot-close {
-            color: white;
-            cursor: pointer;
-            font-size: 22px;
-            transition: all 0.2s ease;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-        }
-
-        .chatbot-close:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: rotate(90deg);
-        }
-
-        .chatbot-iframe-container {
-            height: calc(100% - 54px);
-            width: 100%;
-            position: relative;
-        }
-
-        .chatbot-iframe-container iframe {
-            height: 100%;
-            width: 100%;
-            border: none;
-        }
-
-        .chatbot-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: var(--secondary-color);
-            color: white;
-            border-radius: 50%;
-            width: 22px;
-            height: 22px;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            animation: pulse 1.5s infinite;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            font-weight: bold;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
-        }
-
-        /* Style injector for hiding powered by chatbase */
-        .custom-style-injector {
-            display: none;
-        }
-
-        /* Responsive adjustments for chatbot */
-        @media (max-width: 768px) {
-            .chatbot-panel {
-                width: 320px;
-                height: 480px;
-                bottom: 70px;
-            }
-
-            /* Make chatbot fullscreen on very small devices */
-            @media (max-width: 480px) {
-                .chatbot-panel {
-                    width: calc(100vw - 20px);
-                    height: 70vh;
-                    right: 10px;
-                    bottom: 80px;
-                    border-radius: 16px;
-                }
-            }
-        }
-
-        /* Flashcard Styles */
-        .flashcard-container {
-            max-width: 800px;
-            margin: 0 auto 3rem;
-        }
-
-        .card-wrapper {
-            perspective: 1000px;
-            min-height: 300px;
-            position: relative;
-            margin-bottom: 1.5rem;
-        }
-
-        .flashcard {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            min-height: 300px;
-            transform-style: preserve-3d;
-            transition: transform 0.6s;
-            cursor: pointer;
-            background: transparent;
-        }
-
-        .flashcard.flipped {
-            transform: rotateY(180deg);
-        }
-
-        .card-front, .card-back {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            border-radius: 1rem;
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            box-shadow: var(--shadow);
-        }
-
-        .card-front {
-            background: linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(147, 51, 234, 0.1));
-            border: 1px solid rgba(6, 182, 212, 0.3);
-        }
-
-        .card-back {
-            background: linear-gradient(135deg, rgba(147, 51, 234, 0.1), rgba(6, 182, 212, 0.1));
-            border: 1px solid rgba(147, 51, 234, 0.3);
-            transform: rotateY(180deg);
-        }
-
-        .card-number {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            font-size: 0.875rem;
-            color: var(--text-muted);
-        }
-
-        .card-hint {
-            position: absolute;
-            bottom: 1rem;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-        }
-
-        .question, .answer {
-            font-size: 1.25rem;
-            line-height: 1.6;
-            max-width: 90%;
-        }
-
-        .answer {
-            color: var(--highlight-color);
-            font-weight: 500;
-        }
-
-        /* Controls */
-        .controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .nav-buttons {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            padding: 0.75rem 1.25rem;
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--text-secondary);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 0.5rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: var(--text-primary);
-        }
-
-        .btn-primary {
-            background: rgba(6, 182, 212, 0.2);
-            color: var(--highlight-color);
-            border-color: rgba(6, 182, 212, 0.3);
-        }
-
-        .btn-primary:hover {
-            background: rgba(6, 182, 212, 0.3);
-            color: var(--highlight-color);
-        }
-
-        .btn-success {
-            background: rgba(16, 185, 129, 0.2);
-            color: rgb(16, 185, 129);
-            border-color: rgba(16, 185, 129, 0.3);
-        }
-
-        .btn-success:hover {
-            background: rgba(16, 185, 129, 0.3);
-            color: rgb(16, 185, 129);
-        }
-
-        .progress-container {
-            margin-bottom: 1.5rem;
-        }
-
-        .progress-info {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.5rem;
-            font-size: 0.875rem;
-        }
-
-        .progress-bar {
-            height: 0.5rem;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 1rem;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(to right, var(--highlight-color), var(--secondary-color));
-            border-radius: 1rem;
-            transition: width 0.3s ease;
-        }
-
-        /* Mode Toggle */
-        .mode-toggle {
-            display: flex;
-            gap: 0.75rem;
-            padding: 0.25rem;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 0.5rem;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .mode-btn {
-            padding: 0.5rem 1rem;
-            border-radius: 0.25rem;
-            font-size: 0.875rem;
-            cursor: pointer;
-            transition: var(--transition);
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-        }
-
-        .mode-btn.active {
-            background: rgba(6, 182, 212, 0.2);
-            color: var(--highlight-color);
-        }
-
-        /* Keyboard shortcuts */
-        .shortcuts {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 1rem;
-            border-radius: 0.5rem;
-            margin-top: 1rem;
-        }
-
-        .shortcuts-title {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            margin-bottom: 0.5rem;
-        }
-
-        .shortcuts-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
-
-        .shortcut-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .key {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 1.5rem;
-            height: 1.5rem;
-            padding: 0 0.25rem;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 0.25rem;
-            font-family: monospace;
-            font-weight: 500;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: var(--text-secondary);
-        }
-
-        /* Toast notifications */
-        .toast-container {
-            position: fixed;
-            bottom: 1rem;
-            right: 1rem;
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            max-width: 350px;
-        }
-
-        .toast {
-            padding: 1rem;
-            border-radius: 0.5rem;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
-            color: var(--text-primary);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            animation: slide-in 0.3s ease forwards;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            border-left: 3px solid var(--highlight-color);
-        }
-
-        .toast-icon {
-            font-size: 1.25rem;
-            color: var(--highlight-color);
-        }
-
-        .toast-content {
-            flex-grow: 1;
-        }
-
-        .toast-title {
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-        }
-
-        .toast-message {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-        }
-
-        @keyframes slide-in {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        /* Confetti animation */
-        #confetti-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 99;
-        }
-
-        /* Animation for background effect */
-        .animated-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            overflow: hidden;
-        }
-
-        .animated-bg canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .page-title {
-                font-size: 1.75rem;
-            }
-            
-            .question, .answer {
-                font-size: 1.125rem;
-            }
-            
-            .card-wrapper {
-                min-height: 250px;
-            }
-            
-            .flashcard {
-                min-height: 250px;
-            }
-            
-            .controls {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            
-            .nav-buttons {
-                justify-content: space-between;
-                width: 100%;
-            }
-            
-            .nav-links {
-                display: none;
-            }
-        }
-
-        /* Footer Styles */
-        footer {
-            border-top: 1px solid var(--border-color);
-            padding: 1.5rem 0;
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 0.875rem;
-            margin-top: 3rem;
-        }
-
-        .footer-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 1rem;
-        }
-
-        /* Animation for reveal */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .fade-in {
-            animation: fadeIn 0.5s ease forwards;
-        }
-
-        /* Staggered animation delays */
-        .delay-1 { animation-delay: 0.1s; }
-        .delay-2 { animation-delay: 0.2s; }
-        .delay-3 { animation-delay: 0.3s; }
-        .delay-4 { animation-delay: 0.4s; }
-        .delay-5 { animation-delay: 0.5s; }
-
-        /* Theme specific styles for Unit 2 */
-        .unit2-theme {
-            --highlight-color: #06b6d4;
-            --secondary-highlight: #0e7490;
-        }
-        
-        .unit2-gradient {
-            background: linear-gradient(135deg, #06b6d4, #0e7490);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CST Notes</title>
+  <meta name="description" content="Secure, elegant, and powerful notes revision app exclusively for CST" />
+  <meta name="author" content="CST Students" />
+
+  <meta property="og:title" content="CST Notes" />
+  <meta property="og:description" content="Secure, elegant, and powerful notes revision app exclusively for CST" />
+  <meta property="og:type" content="website" />
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics-compat.js"></script>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'auth-accent': '#6366f1',
+            'auth-accent-hover': '#4f46e5',
+            'auth-secondary': '#8b5cf6',
+            'auth-secondary-hover': '#7c3aed',
+            'auth-highlight': '#a855f7'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: linear-gradient(135deg, #0f0f17 0%, #1a1a2e 100%);
+      color: #ffffff;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .spline-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    .spline-background spline-viewer {
+      width: 100%;
+      height: 100%;
+      border: none;
+      outline: none;
+    }
+
+    .content-overlay {
+      position: relative;
+      z-index: 10;
+      min-height: 100vh;
+      background: rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(1px);
+    }
+
+    .glass-card {
+      backdrop-filter: blur(16px);
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      pointer-events: auto;
+    }
+
+    .input-glow:focus {
+      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5);
+      border-color: #6366f1;
+      transition: all 0.3s ease;
+      outline: none;
+    }
+
+    .input-glow {
+      transition: all 0.3s ease;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .input-glow:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .animated-gradient-button {
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    
+    .animated-gradient-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 200%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.6s ease;
+    }
+    
+    .animated-gradient-button:hover::before {
+      left: 100%;
+    }
+    
+    .animated-gradient-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .toast {
+      transition: all 0.3s ease;
+      transform: translateX(100%);
+      opacity: 0;
+    }
+
+    .toast.show {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .feature-indicator {
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 1; }
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
 </head>
+
 <body>
-    <div class="wrapper unit2-theme">
-        <div class="animated-bg">
-            <canvas id="particleCanvas"></canvas>
+  <!-- Spline 3D Background -->
+  <div class="spline-background">
+    <spline-viewer url="https://prod.spline.design/Wp8Y3evJn0bwyTvl/scene.splinecode"></spline-viewer>
+  </div>
+  
+  <!-- Content Overlay -->
+  <div class="content-overlay">
+    <div class="min-h-screen flex flex-col items-center justify-center p-4">    
+      <div class="w-full max-w-md z-10">
+        <div class="text-center mb-8">
+          <h1 class="text-5xl font-bold mb-2 bg-gradient-to-br from-white via-purple-200 to-indigo-300 bg-clip-text text-transparent drop-shadow-lg">
+            CST Notes
+          </h1>
+          <p class="text-gray-200 max-w-md mx-auto text-lg drop-shadow-md">
+            Secure, elegant, and powerful notes revision app exclusively for CST
+          </p>
         </div>
-
-        <canvas id="confetti-canvas"></canvas>
-
-        <header>
-            <div class="header-content">
-                <h1 class="logo"><i class="fas fa-microchip"></i> CST Notes</h1>
-                <div class="nav-links">
-                    <a href="networks-flashcards.html" class="nav-link">
-                        <i class="fas fa-arrow-left"></i>
-                        <span>All Units</span>
-                    </a>
-                    <a href="#" class="nav-link">
-                        <i class="fas fa-book"></i>
-                        <span>Study Guide</span>
-                    </a>
+        
+        <div class="glass-card rounded-2xl overflow-hidden shadow-2xl">
+          <div class="w-full">
+            <div class="flex flex-col">
+              <div class="flex justify-center mb-2 p-6">
+                <div class="grid w-full grid-cols-2 bg-black/30 backdrop-blur-sm rounded-xl p-1 border border-white/20">
+                  <button 
+                    id="signinTab"
+                    class="py-3 px-4 rounded-lg transition-all duration-300 font-medium text-white bg-gradient-to-r from-indigo-500 to-purple-600 shadow-lg"
+                    onclick="switchTab('signin')"
+                  >
+                    Sign In
+                  </button>
+                  <button 
+                    id="signupTab"
+                    class="py-3 px-4 rounded-lg transition-all duration-300 font-medium text-gray-300 hover:text-white"
+                    onclick="switchTab('signup')"
+                  >
+                    Sign Up
+                  </button>
                 </div>
-                <button class="logout-btn" onclick="alert('Signing out...')">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Sign Out</span>
+              </div>
+              <div class="text-2xl font-bold text-center bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent px-6">
+                CST Notes
+              </div>
+              <p class="text-center text-gray-300 px-6 mb-6">
+                Secure access to your revision notes
+              </p>
+            </div>
+
+            <div class="p-6 pt-0">
+              <!-- Sign In Form -->
+              <div id="signinContent" class="space-y-6">
+                <div class="space-y-2">
+                  <input
+                    id="email"
+                    type="email"
+                    placeholder="Email address"
+                    class="w-full bg-black/20 backdrop-blur-sm border border-white/30 rounded-lg px-4 py-3 text-white placeholder-gray-300 input-glow"
+                    required
+                  />
+                </div>
+                <div class="space-y-2 relative">
+                  <input
+                    id="password"
+                    type="password"
+                    placeholder="Password"
+                    class="w-full bg-black/20 backdrop-blur-sm border border-white/30 rounded-lg px-4 py-3 pr-12 text-white placeholder-gray-300 input-glow"
+                    required
+                  />
+                  <button
+                    type="button"
+                    id="togglePassword"
+                    class="absolute right-3 top-3 text-gray-400 hover:text-white transition-colors duration-200"
+                    onclick="togglePasswordVisibility()"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
+                      <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path>
+                      <path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path>
+                      <line x1="2" x2="22" y1="2" y2="22"></line>
+                    </svg>
+                  </button>
+                </div>
+                <button 
+                  onclick="signIn()"
+                  class="w-full bg-gradient-to-r from-indigo-600 to-purple-700 hover:from-indigo-700 hover:to-purple-800 text-white px-4 py-3 rounded-lg font-medium animated-gradient-button"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline mr-2">
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                    <polyline points="10 17 15 12 10 7"></polyline>
+                    <line x1="15" y1="12" x2="3" y2="12"></line>
+                  </svg>
+                  Sign In
                 </button>
+                <div class="relative flex justify-center text-xs uppercase">
+                  <span class="bg-black/40 backdrop-blur-sm px-3 py-1 text-gray-400 relative z-10 rounded-full">Or continue with</span>
+                  <div class="absolute inset-0 flex items-center">
+                    <span class="w-full border-t border-white/30"></span>
+                  </div>
+                </div>
+                <button
+                  onclick="signInWithGoogle()"
+                  class="w-full border border-white/30 hover:bg-white/10 backdrop-blur-sm text-white px-4 py-3 rounded-lg font-medium animated-gradient-button"
+                >
+                  <svg class="inline mr-2 h-5 w-5" viewBox="0 0 24 24">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                  </svg>
+                  Google
+                </button>
+              </div>
+
+              <!-- Sign Up Form -->
+              <div id="signupContent" class="space-y-6 hidden">
+                <div class="space-y-2">
+                  <input
+                    id="emailSignup"
+                    type="email"
+                    placeholder="Email address"
+                    class="w-full bg-black/20 backdrop-blur-sm border border-white/30 rounded-lg px-4 py-3 text-white placeholder-gray-300 input-glow"
+                    required
+                  />
+                </div>
+                <div class="space-y-2 relative">
+                  <input
+                    id="passwordSignup"
+                    type="password"
+                    placeholder="Password"
+                    class="w-full bg-black/20 backdrop-blur-sm border border-white/30 rounded-lg px-4 py-3 pr-12 text-white placeholder-gray-300 input-glow"
+                    required
+                  />
+                  <button
+                    type="button"
+                    id="togglePasswordSignup"
+                    class="absolute right-3 top-3 text-gray-400 hover:text-white transition-colors duration-200"
+                    onclick="togglePasswordVisibilitySignup()"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
+                      <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path>
+                      <path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path>
+                      <line x1="2" x2="22" y1="2" y2="22"></line>
+                    </svg>
+                  </button>
+                </div>
+                <button 
+                  onclick="signUp()"
+                  class="w-full bg-gradient-to-r from-purple-600 to-pink-700 hover:from-purple-700 hover:to-pink-800 text-white px-4 py-3 rounded-lg font-medium animated-gradient-button"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline mr-2">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                  Create Account
+                </button>
+                <div class="relative flex justify-center text-xs uppercase">
+                  <span class="bg-black/40 backdrop-blur-sm px-3 py-1 text-gray-400 relative z-10 rounded-full">Or continue with</span>
+                  <div class="absolute inset-0 flex items-center">
+                    <span class="w-full border-t border-white/30"></span>
+                  </div>
+                </div>
+                <button
+                  onclick="signInWithGoogle()"
+                  class="w-full border border-white/30 hover:bg-white/10 backdrop-blur-sm text-white px-4 py-3 rounded-lg font-medium animated-gradient-button"
+                >
+                  <svg class="inline mr-2 h-5 w-5" viewBox="0 0 24 24">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                  </svg>
+                  Google
+                </button>
+              </div>
             </div>
-        </header>
-
-        <main>
-            <h2 class="page-title fade-in">UNIT II - The Physical Layer</h2>
-            <p class="page-subtitle fade-in delay-1">
-                Master key concepts about transmission media, multiplexing, satellites, and data encoding techniques
-            </p>
-
-            <div class="flashcard-container">
-                <div class="progress-container fade-in delay-2">
-                    <div class="progress-info">
-                        <span id="progress-text">Progress: 0%</span>
-                        <span id="cards-count">Card 1 of 25</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div id="progress-fill" class="progress-fill" style="width: 0%;"></div>
-                    </div>
-                </div>
-
-                <div class="controls fade-in delay-2">
-                    <div class="nav-buttons">
-                        <button id="prev-btn" class="btn">
-                            <i class="fas fa-chevron-left"></i>
-                            Previous
-                        </button>
-                        <button id="next-btn" class="btn">
-                            Next
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
-                    </div>
-                    
-                    <div class="mode-toggle">
-                        <button id="all-cards-btn" class="mode-btn active">All Cards</button>
-                        <button id="unknown-cards-btn" class="mode-btn">Unknown Only</button>
-                    </div>
-                    
-                    <button id="mark-known-btn" class="btn btn-primary">
-                        <i class="fas fa-lightbulb"></i>
-                        Mark as Known
-                    </button>
-                </div>
-
-                <div id="card-wrapper" class="card-wrapper fade-in delay-3">
-                    <div id="flashcard" class="flashcard">
-                        <div class="card-front">
-                            <span id="card-number" class="card-number">1/25</span>
-                            <p id="question" class="question">What is Frequency Division Multiplexing (FDM)?</p>
-                            <div class="card-hint">
-                                <i class="fas fa-undo-alt"></i>
-                                Click to flip
-                            </div>
-                        </div>
-                        <div class="card-back">
-                            <span id="card-number-back" class="card-number">1/25</span>
-                            <p id="answer" class="answer">FDM is a technique that subdivides the available bandwidth of a single transmission medium into several frequency channels, each allocated to different devices.</p>
-                            <div class="card-hint">
-                                <i class="fas fa-undo-alt"></i>
-                                Click to flip
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="shortcuts fade-in delay-4">
-                    <h3 class="shortcuts-title">Keyboard Shortcuts</h3>
-                    <div class="shortcuts-list">
-                        <div class="shortcut-item">
-                            <span class="key">Space</span>
-                            <span>Flip card</span>
-                        </div>
-                        <div class="shortcut-item">
-                            <span class="key">←</span>
-                            <span>Previous card</span>
-                        </div>
-                        <div class="shortcut-item">
-                            <span class="key">→</span>
-                            <span>Next card</span>
-                        </div>
-                        <div class="shortcut-item">
-                            <span class="key">K</span>
-                            <span>Mark as known</span>
-                        </div>
-                        <div class="shortcut-item">
-                            <span class="key">R</span>
-                            <span>Reset progress</span>
-                        </div>
-                    </div>
-                </div>
+            
+            <div class="flex flex-col items-center p-6 pt-0">
+              <p class="mt-2 text-xs text-center text-gray-400">
+                By continuing, you agree to our Terms of Service and Privacy Policy
+              </p>
             </div>
-        </main>
-
-        <footer>
-            <div class="footer-content">
-                <p>© 2025 CST Notes - Computer Networks Flashcards</p>
-            </div>
-        </footer>
-
-        <div class="toast-container" id="toast-container">
-            <!-- Toast notifications will be added dynamically -->
+          </div>
         </div>
 
-        <!-- Chatbot Integration - Improved UI -->
-        <div class="chatbot-container">
-            <div class="chatbot-button" id="chatbot-toggle">
-                <div class="chatbot-badge">1</div>
-                <i class="fas fa-robot chatbot-icon"></i>
+        <div class="mt-8 text-center text-sm text-gray-300">
+          <p class="drop-shadow-md">Powered by Students of CST</p>
+          <div class="flex justify-center space-x-6 mt-4">
+            <div class="flex items-center">
+              <div class="w-2 h-2 rounded-full bg-indigo-400 mr-2 feature-indicator"></div>
+              <span>Revision Flashcards</span>
             </div>
-            <div class="chatbot-panel" id="chatbot-panel">
-                <div class="chatbot-header">
-                    <div class="chatbot-header-title">
-                        <i class="fas fa-robot"></i>
-                        <span>Network Concepts Assistant</span>
-                    </div>
-                    <i class="fas fa-times chatbot-close" id="chatbot-close"></i>
-                </div>
-                <div class="chatbot-iframe-container" id="chatbot-iframe-container">
-                    <!-- Chatbot iframe will be dynamically added here -->
-                </div>
+            <div class="flex items-center">
+              <div class="w-2 h-2 rounded-full bg-purple-400 mr-2 feature-indicator"></div>
+              <span>Important Questions</span>
             </div>
+          </div>
         </div>
-
-        <!-- Hidden styling to inject into iframe -->
-        <style id="chatbot-css-to-inject">
-            .platform-banner {
-                display: none !important;
-            }
-            .footer, 
-            .powered-by, 
-            [data-testid="powered-by"] {
-                display: none !important;
-                visibility: hidden !important;
-                height: 0 !important;
-                width: 0 !important;
-                opacity: 0 !important;
-                pointer-events: none !important;
-            }
-            .message-input-container {
-                border-top: none !important;
-                background: rgba(15, 15, 23, 0.8) !important;
-                backdrop-filter: blur(10px) !important;
-            }
-            .chat-container, .chatbase-container {
-                background: transparent !important;
-            }
-        </style>
+      </div>
     </div>
+  </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script>
-        // Flashcard Data
-        const flashcards = [
-            {
-                question: "What is Frequency Division Multiplexing (FDM)?",
-                answer: "FDM is a technique that subdivides the available bandwidth of a single transmission medium into several frequency channels, each allocated to different devices."
-            },
-            {
-                question: "What is Time Division Multiplexing (TDM)?",
-                answer: "TDM allocates different time slots to different users for data transmission on the same frequency."
-            },
-            {
-                question: "What is the difference between Synchronous TDM and Asynchronous TDM?",
-                answer: "Synchronous TDM assigns fixed time slots to devices, while Asynchronous TDM allocates time slots dynamically based on the presence of data."
-            },
-            {
-                question: "What is the principle of operation for Fiber-Optic Transmission?",
-                answer: "Fiber-optic transmission uses the bending of light rays to transmit data over long distances."
-            },
-            {
-                question: "What are the key components of an optical transmission system?",
-                answer: "The components include the light source, fiber optic cables, and detectors."
-            },
-            {
-                question: "What is Frequency Hopping Spread Spectrum (FHSS)?",
-                answer: "FHSS is a technique used in wireless communication where the carrier frequency hops to different frequencies in a pattern."
-            },
-            {
-                question: "What are the main advantages of Frequency Hopping Spread Spectrum?",
-                answer: "FHSS reduces interference and enhances security by hopping between frequencies."
-            },
-            {
-                question: "What does Direct Sequence Spread Spectrum (DSSS) do?",
-                answer: "DSSS spreads the signal over a wide bandwidth by multiplying the data with a pseudorandom noise sequence."
-            },
-            {
-                question: "What is the principle of Baseband Transmission?",
-                answer: "Baseband transmission involves sending digital signals without modulating a carrier wave."
-            },
-            {
-                question: "What is Amplitude Shift Keying (ASK)?",
-                answer: "ASK is a digital modulation technique where different amplitudes represent binary values."
-            },
-            {
-                question: "What is Frequency Shift Keying (FSK)?",
-                answer: "FSK uses different frequencies to represent binary values."
-            },
-            {
-                question: "What is Phase Shift Keying (PSK)?",
-                answer: "PSK modulates the phase of the carrier signal to encode data."
-            },
-            {
-                question: "What is the role of a multiplexer (MUX) in multiplexing?",
-                answer: "A multiplexer combines multiple input signals into a single output signal to efficiently use the communication channel."
-            },
-            {
-                question: "What is the difference between analog and digital multiplexing?",
-                answer: "Analog multiplexing uses frequency or wavelength, while digital multiplexing combines discrete data streams."
-            },
-            {
-                question: "What is a common application of FDM?",
-                answer: "FDM is commonly used in radio and television broadcasting."
-            },
-            {
-                question: "What is the use of satellites in communication?",
-                answer: "Satellites amplify and rebroadcast signals, acting as microwave repeaters to facilitate long-distance communication."
-            },
-            {
-                question: "What is the function of a transponder in a communication satellite?",
-                answer: "A transponder amplifies and rebroadcasts the signals at different frequencies."
-            },
-            {
-                question: "How does an artificial satellite differ from a natural satellite in communication?",
-                answer: "Unlike natural satellites, artificial satellites amplify signals before rebroadcasting."
-            },
-            {
-                question: "What is Kepler's Law in relation to satellite orbits?",
-                answer: "Kepler's Law states that the orbital period of a satellite increases with the radius of the orbit."
-            },
-            {
-                question: "What is the significance of Optical Fiber in communication?",
-                answer: "Optical fiber offers high data transmission rates with minimal signal loss."
-            },
-            {
-                question: "What are the main components of a fiber-optic cable?",
-                answer: "A fiber-optic cable includes the core, cladding, and protective coatings."
-            },
-            {
-                question: "What is Wavelength Division Multiplexing (WDM)?",
-                answer: "WDM is similar to FDM but uses optical signals transmitted through fiber optics instead of electrical signals."
-            },
-            {
-                question: "What is the main advantage of WDM?",
-                answer: "WDM allows multiple data streams to be transmitted simultaneously over a single optical fiber using different wavelengths of light."
-            },
-            {
-                question: "What is the difference between Dense WDM (DWDM) and Coarse WDM (CWDM)?",
-                answer: "DWDM uses more channels with smaller wavelength spacing, while CWDM uses fewer channels with larger spacing."
-            },
-            {
-                question: "How does a satellite communication system work?",
-                answer: "Satellite communication works by transmitting signals from an earth station to a satellite (uplink), which then amplifies and retransmits the signals back to earth (downlink)."
-            }
-        ];
+  <!-- Toast notification -->
+  <div id="toast" class="fixed right-4 top-4 max-w-xs bg-white text-gray-800 rounded-lg shadow-lg z-50 toast">
+    <div class="flex p-4">
+      <div id="toastIcon" class="flex-shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <div class="ml-3">
+        <p id="toastText" class="text-sm font-medium"></p>
+      </div>
+      <button onclick="closeToast()" class="ml-auto -mx-1.5 -my-1.5 text-gray-500 hover:text-gray-700 rounded-lg p-1.5">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  </div>
 
-        // Track known cards
-        let knownCards = JSON.parse(localStorage.getItem('unit2KnownCards')) || [];
-        let currentCardIndex = 0;
-        let mode = 'all'; // 'all' or 'unknown'
-        
-        // DOM elements
-        const flashcardElem = document.getElementById('flashcard');
-        const questionElem = document.getElementById('question');
-        const answerElem = document.getElementById('answer');
-        const cardNumberElem = document.getElementById('card-number');
-        const cardNumberBackElem = document.getElementById('card-number-back');
-        const prevBtn = document.getElementById('prev-btn');
-        const nextBtn = document.getElementById('next-btn');
-        const markKnownBtn = document.getElementById('mark-known-btn');
-        const progressTextElem = document.getElementById('progress-text');
-        const progressFillElem = document.getElementById('progress-fill');
-        const cardsCountElem = document.getElementById('cards-count');
-        const allCardsBtn = document.getElementById('all-cards-btn');
-        const unknownCardsBtn = document.getElementById('unknown-cards-btn');
-        const toastContainer = document.getElementById('toast-container');
-        
-        // Chatbot elements
-        const chatbotToggle = document.getElementById('chatbot-toggle');
-        const chatbotPanel = document.getElementById('chatbot-panel');
-        const chatbotClose = document.getElementById('chatbot-close');
-        const chatbotIframeContainer = document.getElementById('chatbot-iframe-container');
-        
-        // Initialize Chatbot
-        function initChatbot() {
-            // Create iframe programmatically to have more control
-            const iframe = document.createElement('iframe');
-            iframe.src = 'https://www.chatbase.co/chatbot-iframe/9Sz857Nlq0ipwyVRZA9_k?forceHideBadge=true';
-            iframe.width = '100%';
-            iframe.height = '100%';
-            iframe.style.border = 'none';
-            iframe.id = 'chatbot-iframe';
-            chatbotIframeContainer.appendChild(iframe);
-            
-            // Use MutationObserver to inject styles that hide the "Powered by" text when iframe loads
-            iframe.onload = function() {
-                try {
-                    // Get the iframe document
-                    const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-                    
-                    // Create a style element
-                    const style = document.createElement('style');
-                    style.textContent = document.getElementById('chatbot-css-to-inject').textContent;
-                    
-                    // Append the style to the iframe head
-                    iframeDocument.head.appendChild(style);
-                    
-                    // Create a MutationObserver to handle dynamically loaded content
-                    const observer = new MutationObserver(function(mutations) {
-                        // Re-inject our styles periodically to ensure they stay applied
-                        const style = document.createElement('style');
-                        style.textContent = document.getElementById('chatbot-css-to-inject').textContent;
-                        iframeDocument.head.appendChild(style);
-                        
-                        // Find and hide "Powered by" elements
-                        const poweredByElements = iframeDocument.querySelectorAll('[data-testid="powered-by"], .footer, .powered-by, .platform-banner');
-                        poweredByElements.forEach(element => {
-                            element.style.display = 'none';
-                            element.style.visibility = 'hidden';
-                            element.style.height = '0';
-                            element.style.opacity = '0';
-                        });
-                    });
-                    
-                    // Start observing
-                    observer.observe(iframeDocument.body, { 
-                        childList: true, 
-                        subtree: true 
-                    });
-                    
-                    // Show a welcome toast
-                    showToast('Assistant Ready', 'Ask any questions about network concepts!', 'info');
-                    
-                } catch (error) {
-                    console.error("Error injecting styles:", error);
-                }
-            };
-        }
+  <!-- Load Spline viewer -->
+  <script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.96/build/spline-viewer.js"></script>
 
-        // Toggle the chatbot panel
-        chatbotToggle.addEventListener('click', function() {
-            chatbotPanel.classList.toggle('active');
-            // Initialize chatbot if not already done
-            if (!document.getElementById('chatbot-iframe')) {
-                initChatbot();
-            }
-            // Remove badge when opened
-            const badge = document.querySelector('.chatbot-badge');
-            if (badge) badge.style.display = 'none';
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAZs1VXb5_66-CLdf5SNd5jYButjvvavs0",
+      authDomain: "cst-notes-71801.firebaseapp.com",
+      projectId: "cst-notes-71801",
+      storageBucket: "cst-notes-71801.firebasestorage.app",
+      messagingSenderId: "671538684629",
+      appId: "1:671538684629:web:2cbc10e27d421975acf85c",
+      measurementId: "G-GQ4JV0K0HV"
+    };
+    
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    
+    // Tab switching
+    function switchTab(tab) {
+      const signinTab = document.getElementById('signinTab');
+      const signupTab = document.getElementById('signupTab');
+      const signinContent = document.getElementById('signinContent');
+      const signupContent = document.getElementById('signupContent');
+      
+      if (tab === 'signin') {
+        signinContent.classList.remove('hidden');
+        signupContent.classList.add('hidden');
+        signinTab.className = 'py-3 px-4 rounded-lg transition-all duration-300 font-medium text-white bg-gradient-to-r from-indigo-500 to-purple-600 shadow-lg';
+        signupTab.className = 'py-3 px-4 rounded-lg transition-all duration-300 font-medium text-gray-300 hover:text-white';
+      } else {
+        signinContent.classList.add('hidden');
+        signupContent.classList.remove('hidden');
+        signinTab.className = 'py-3 px-4 rounded-lg transition-all duration-300 font-medium text-gray-300 hover:text-white';
+        signupTab.className = 'py-3 px-4 rounded-lg transition-all duration-300 font-medium text-white bg-gradient-to-r from-indigo-500 to-purple-600 shadow-lg';
+      }
+    }
+    
+    // Toggle password visibility
+    function togglePasswordVisibility() {
+      const passwordInput = document.getElementById('password');
+      const toggleButton = document.getElementById('togglePassword');
+      
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleButton.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        `;
+      } else {
+        passwordInput.type = 'password';
+        toggleButton.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
+            <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path>
+            <path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path>
+            <line x1="2" x2="22" y1="2" y2="22"></line>
+          </svg>
+        `;
+      }
+    }
+    
+    function togglePasswordVisibilitySignup() {
+      const passwordInput = document.getElementById('passwordSignup');
+      const toggleButton = document.getElementById('togglePasswordSignup');
+      
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleButton.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        `;
+      } else {
+        passwordInput.type = 'password';
+        toggleButton.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
+            <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path>
+            <path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path>
+            <line x1="2" x2="22" y1="2" y2="22"></line>
+          </svg>
+        `;
+      }
+    }
+    
+    // Toast notifications
+    function showToast(message, isSuccess = true) {
+      const toast = document.getElementById('toast');
+      const toastText = document.getElementById('toastText');
+      const toastIcon = document.getElementById('toastIcon');
+      
+      toastText.textContent = message;
+      
+      if (isSuccess) {
+        toastIcon.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        `;
+      } else {
+        toastIcon.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        `;
+      }
+      
+      toast.classList.add('show');
+      
+      // Auto close after 3 seconds
+      setTimeout(() => {
+        closeToast();
+      }, 3000);
+    }
+    
+    function closeToast() {
+      const toast = document.getElementById('toast');
+      toast.classList.remove('show');
+    }
+    
+    // Authentication functions
+    function signUp() {
+      const email = document.getElementById('emailSignup').value;
+      const password = document.getElementById('passwordSignup').value;
+      
+      if (!email || !password) {
+        showToast('Please enter both email and password', false);
+        return;
+      }
+      
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(() => {
+          showToast('Account created successfully!');
+          setTimeout(() => {
+            console.log('Redirect to dashboard');
+            // window.location.href = 'dashboard.html';
+          }, 1500);
+        })
+        .catch(error => {
+          showToast(error.message, false);
         });
+    }
+    
+    function signIn() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      if (!email || !password) {
+        showToast('Please enter both email and password', false);
+        return;
+      }
+      
+      auth.signInWithEmailAndPassword(email, password)
+        .then(() => {
+          showToast('Signed in successfully!');
+          setTimeout(() => {
+            console.log('Redirect to dashboard');
+            // window.location.href = 'dashboard.html';
+          }, 1500);
+        })
+        .catch(error => {
+          showToast(error.message, false);
+        });
+    }
+    
+    function signInWithGoogle() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      
+      auth.signInWithPopup(provider)
+        .then(() => {
+          showToast('Signed in with Google successfully!');
+          setTimeout(() => {
+            console.log('Redirect to dashboard');
+            // window.location.href = 'dashboard.html';
+          }, 1500);
+        })
+        .catch(error => {
+          showToast(error.message, false);
+        });
+    }
 
-        chatbotClose.addEventListener('click', function() {
-            chatbotPanel.classList.remove('active');
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      // Set initial active tab
+      switchTab('signin');
+      
+      // Ensure Spline viewer loads properly
+      const splineViewer = document.querySelector('spline-viewer');
+      if (splineViewer) {
+        splineViewer.addEventListener('ready', function() {
+          console.log('Spline viewer loaded successfully');
         });
-
-        // Flashcard functionality
-        function updateCard() {
-            // Ensure card is shown front-side
-            flashcardElem.classList.remove('flipped');
-            
-            // Show card content
-            const card = flashcards[currentCardIndex];
-            questionElem.textContent = card.question;
-            answerElem.textContent = card.answer;
-            
-            // Update card number display
-            const displayIndex = currentCardIndex + 1;
-            cardNumberElem.textContent = `${displayIndex}/${flashcards.length}`;
-            cardNumberBackElem.textContent = `${displayIndex}/${flashcards.length}`;
-            cardsCountElem.textContent = `Card ${displayIndex} of ${flashcards.length}`;
-            
-            // Update known/unknown status styling
-            if (knownCards.includes(currentCardIndex)) {
-                markKnownBtn.innerHTML = '<i class="fas fa-undo"></i> Mark as Unknown';
-                markKnownBtn.classList.add('btn-success');
-                markKnownBtn.classList.remove('btn-primary');
-            } else {
-                markKnownBtn.innerHTML = '<i class="fas fa-lightbulb"></i> Mark as Known';
-                markKnownBtn.classList.add('btn-primary');
-                markKnownBtn.classList.remove('btn-success');
-            }
-            
-            // Update progress indicators
-            updateProgress();
-        }
-        
-        // Flip card when clicked
-        flashcardElem.addEventListener('click', function() {
-            this.classList.toggle('flipped');
-        });
-        
-        // Navigate to previous card
-        prevBtn.addEventListener('click', function() {
-            if (mode === 'all') {
-                currentCardIndex = (currentCardIndex - 1 + flashcards.length) % flashcards.length;
-                updateCard();
-            } else {
-                // Navigate to previous unknown card
-                const unknownCardIndices = flashcards.map((_, index) => index).filter(index => !knownCards.includes(index));
-                if (unknownCardIndices.length === 0) {
-                    showToast('No Unknown Cards', 'All cards are marked as known!', 'warning');
-                    return;
-                }
-                
-                const currentUnknownIndex = unknownCardIndices.indexOf(currentCardIndex);
-                const newUnknownIndex = (currentUnknownIndex - 1 + unknownCardIndices.length) % unknownCardIndices.length;
-                currentCardIndex = unknownCardIndices[newUnknownIndex];
-                updateCard();
-            }
-        });
-        
-        // Navigate to next card
-        nextBtn.addEventListener('click', function() {
-            if (mode === 'all') {
-                currentCardIndex = (currentCardIndex + 1) % flashcards.length;
-                updateCard();
-            } else {
-                // Navigate to next unknown card
-                const unknownCardIndices = flashcards.map((_, index) => index).filter(index => !knownCards.includes(index));
-                if (unknownCardIndices.length === 0) {
-                    showToast('No Unknown Cards', 'All cards are marked as known!', 'warning');
-                    return;
-                }
-                
-                const currentUnknownIndex = unknownCardIndices.indexOf(currentCardIndex);
-                const newUnknownIndex = (currentUnknownIndex + 1) % unknownCardIndices.length;
-                currentCardIndex = unknownCardIndices[newUnknownIndex];
-                updateCard();
-            }
-        });
-        
-        // Mark card as known/unknown
-        markKnownBtn.addEventListener('click', function() {
-            if (knownCards.includes(currentCardIndex)) {
-                // Mark as unknown
-                knownCards = knownCards.filter(index => index !== currentCardIndex);
-                showToast('Marked as Unknown', 'Card removed from known cards.', 'info');
-            } else {
-                // Mark as known
-                knownCards.push(currentCardIndex);
-                showToast('Marked as Known', 'Card added to known cards!', 'success');
-                
-                // If all cards are known, trigger celebration
-                if (knownCards.length === flashcards.length) {
-                    celebrateCompletion();
-                }
-            }
-            
-            // Save to localStorage
-            localStorage.setItem('unit2KnownCards', JSON.stringify(knownCards));
-            
-            // If in 'unknown' mode and current card is now known, move to next unknown card
-            if (mode === 'unknown' && knownCards.includes(currentCardIndex)) {
-                const unknownCardIndices = flashcards.map((_, index) => index).filter(index => !knownCards.includes(index));
-                
-                if (unknownCardIndices.length === 0) {
-                    // Switch to 'all' mode if no unknown cards left
-                    mode = 'all';
-                    allCardsBtn.classList.add('active');
-                    unknownCardsBtn.classList.remove('active');
-                    showToast('All Cards Known', 'Switching to "All Cards" mode.', 'success');
-                } else {
-                    // Move to next unknown card
-                    currentCardIndex = unknownCardIndices[0];
-                }
-            }
-            
-            updateCard();
-        });
-        
-        // Switch to "All Cards" mode
-        allCardsBtn.addEventListener('click', function() {
-            if (mode !== 'all') {
-                mode = 'all';
-                this.classList.add('active');
-                unknownCardsBtn.classList.remove('active');
-                updateCard();
-                showToast('Mode Changed', 'Showing all cards.', 'info');
-            }
-        });
-        
-        // Switch to "Unknown Cards" mode
-        unknownCardsBtn.addEventListener('click', function() {
-            if (mode !== 'unknown') {
-                mode = 'unknown';
-                this.classList.add('active');
-                allCardsBtn.classList.remove('active');
-                
-                const unknownCardIndices = flashcards.map((_, index) => index).filter(index => !knownCards.includes(index));
-                
-                if (unknownCardIndices.length === 0) {
-                    showToast('No Unknown Cards', 'All cards are marked as known!', 'warning');
-                    // Stay in "all" mode
-                    mode = 'all';
-                    this.classList.remove('active');
-                    allCardsBtn.classList.add('active');
-                } else {
-                    // Move to first unknown card
-                    currentCardIndex = unknownCardIndices[0];
-                    updateCard();
-                    showToast('Mode Changed', 'Showing unknown cards only.', 'info');
-                }
-            }
-        });
-        
-        // Update progress indicators
-        function updateProgress() {
-            const progressPercent = Math.round((knownCards.length / flashcards.length) * 100);
-            progressTextElem.textContent = `Progress: ${progressPercent}%`;
-            progressFillElem.style.width = `${progressPercent}%`;
-        }
-        
-        // Show toast notification
-        function showToast(title, message, type = 'info') {
-            const toast = document.createElement('div');
-            toast.className = 'toast';
-            
-            let iconClass = 'fas fa-info-circle';
-            if (type === 'success') iconClass = 'fas fa-check-circle';
-            if (type === 'warning') iconClass = 'fas fa-exclamation-triangle';
-            if (type === 'error') iconClass = 'fas fa-times-circle';
-            
-            toast.innerHTML = `
-                <div class="toast-icon"><i class="${iconClass}"></i></div>
-                <div class="toast-content">
-                    <div class="toast-title">${title}</div>
-                    <div class="toast-message">${message}</div>
-                </div>
-            `;
-            
-            toastContainer.appendChild(toast);
-            
-            // Remove toast after a delay
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateX(100%)';
-                setTimeout(() => {
-                    toastContainer.removeChild(toast);
-                }, 300);
-            }, 3000);
-        }
-        
-        // Celebrate completion with confetti
-        function celebrateCompletion() {
-            confetti({
-                particleCount: 100,
-                spread: 70,
-                origin: { y: 0.6 }
-            });
-            
-            showToast('Congratulations!', 'You have learned all the cards in this unit!', 'success');
-        }
-        
-        // Keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
-            // Space - flip card
-            if (e.code === 'Space') {
-                flashcardElem.classList.toggle('flipped');
-                e.preventDefault();
-            }
-            
-            // Left arrow - previous card
-            if (e.code === 'ArrowLeft') {
-                prevBtn.click();
-                e.preventDefault();
-            }
-            
-            // Right arrow - next card
-            if (e.code === 'ArrowRight') {
-                nextBtn.click();
-                e.preventDefault();
-            }
-            
-            // 'K' - mark as known
-            if (e.code === 'KeyK') {
-                markKnownBtn.click();
-                e.preventDefault();
-            }
-            
-            // 'R' - reset progress
-            if (e.code === 'KeyR') {
-                if (confirm('Are you sure you want to reset all progress?')) {
-                    knownCards = [];
-                    localStorage.setItem('unit2KnownCards', JSON.stringify(knownCards));
-                    updateCard();
-                    showToast('Progress Reset', 'All cards are now marked as unknown.', 'info');
-                }
-                e.preventDefault();
-            }
-        });
-        
-        // Initialize particles
-        function initParticles() {
-            const canvas = document.getElementById('particleCanvas');
-            const ctx = canvas.getContext('2d');
-            
-            // Set canvas dimensions
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            
-            // Particle properties
-            const particles = [];
-            const particleCount = 50;
-            
-            // Create particles
-            for (let i = 0; i < particleCount; i++) {
-                particles.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    radius: Math.random() * 2 + 0.5,
-                    color: `rgba(6, 182, 212, ${Math.random() * 0.3 + 0.1})`,
-                    speedX: Math.random() * 0.5 - 0.25,
-                    speedY: Math.random() * 0.5 - 0.25
-                });
-            }
-            
-            // Animation loop
-            function animate() {
-                // Clear canvas
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                
-                // Update and draw particles
-                particles.forEach(particle => {
-                    // Move particle
-                    particle.x += particle.speedX;
-                    particle.y += particle.speedY;
-                    
-                    // Wrap around edges
-                    if (particle.x < 0) particle.x = canvas.width;
-                    if (particle.x > canvas.width) particle.x = 0;
-                    if (particle.y < 0) particle.y = canvas.height;
-                    if (particle.y > canvas.height) particle.y = 0;
-                    
-                    // Draw particle
-                    ctx.beginPath();
-                    ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
-                    ctx.fillStyle = particle.color;
-                    ctx.fill();
-                });
-                
-                requestAnimationFrame(animate);
-            }
-            
-            // Start animation
-            animate();
-            
-            // Resize event
-            window.addEventListener('resize', function() {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-            });
-        }
-        
-        // Initialize application
-        function init() {
-            updateCard();
-            initParticles();
-            
-            // Welcome toast
-            setTimeout(() => {
-                showToast('Welcome!', 'Click on cards to reveal answers. Use navigation buttons to move between cards.', 'info');
-            }, 1000);
-        }
-        
-        // Start app
-        init();
-    </script>
+      }
+    });
+  </script>
 </body>
 </html>

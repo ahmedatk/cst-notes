@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CSTNotes Analytics Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Firebase Modular SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAZs1VXb5_66-CLdf5SNd5jYButjvvavs0",
+      authDomain: "cst-notes-71801.firebaseapp.com",
+      projectId: "cst-notes-71801",
+      storageBucket: "cst-notes-71801.firebasestorage.app",
+      messagingSenderId: "671538684629",
+      appId: "1:671538684629:web:2cbc10e27d421975acf85c",
+      measurementId: "G-GQ4JV0K0HV"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function loadData() {
+      try {
+        const snapshot = await getDocs(collection(db, "analytics"));
+        const data = snapshot.docs.map(doc => doc.data());
+
+        const eventCounts = {};
+        const variantCounts = { A: 0, B: 0 };
+
+        data.forEach(entry => {
+          eventCounts[entry.event] = (eventCounts[entry.event] || 0) + 1;
+          if (entry.variant) {
+            variantCounts[entry.variant] = (variantCounts[entry.variant] || 0) + 1;
+          }
+        });
+
+        // Bar chart - Event Count
+        const eventCtx = document.getElementById('eventChart').getContext('2d');
+        new Chart(eventCtx, {
+          type: 'bar',
+          data: {
+            labels: Object.keys(eventCounts),
+            datasets: [{
+              label: 'Event Count',
+              data: Object.values(eventCounts),
+              backgroundColor: 'rgba(54, 162, 235, 0.6)'
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { display: false }
+            }
+          }
+        });
+
+        // Pie chart - Variant Split
+        const variantCtx = document.getElementById('variantChart').getContext('2d');
+        new Chart(variantCtx, {
+          type: 'pie',
+          data: {
+            labels: ['Variant A', 'Variant B'],
+            datasets: [{
+              label: 'Variant Split',
+              data: [variantCounts.A, variantCounts.B],
+              backgroundColor: ['#4CAF50', '#F44336']
+            }]
+          },
+          options: {
+            responsive: true
+          }
+        });
+      } catch (error) {
+        console.error("Error loading analytics data:", error);
+        document.getElementById("status").innerText = "Failed to load analytics.";
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', loadData);
+  </script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111827;
+      color: #ffffff;
+      margin: 0;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    h2 {
+      color: #60A5FA;
+    }
+
+    canvas {
+      margin: 2rem auto;
+      max-width: 95%;
+      background: #1f2937;
+      border-radius: 8px;
+      padding: 1rem;
+    }
+
+    #status {
+      margin-top: 1rem;
+      font-style: italic;
+      color: #9CA3AF;
+    }
+  </style>
+</head>
+<body>
+  <h2>CSTNotes User Analytics</h2>
+  <canvas id="eventChart" width="600" height="300"></canvas>
+  <canvas id="variantChart" width="600" height="300"></canvas>
+  <div id="status">Loading analytics...</div>
+</body>
+</html>

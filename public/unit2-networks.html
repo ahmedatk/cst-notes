@@ -145,7 +145,7 @@
             margin-right: auto;
         }
         
-        /* Chatbot Styles - Enhanced */
+        /* Chatbot Styles - Enhanced for Mobile */
         .chatbot-container {
             position: fixed;
             bottom: 20px;
@@ -285,23 +285,50 @@
             display: none;
         }
 
-        /* Responsive adjustments for chatbot */
+        /* Responsive adjustments for chatbot - ENHANCED FOR MOBILE */
         @media (max-width: 768px) {
             .chatbot-panel {
-                width: 320px;
-                height: 480px;
-                bottom: 70px;
+                width: 85vw;
+                height: 60vh;
+                bottom: 80px;
+                right: 10px;
+                border-radius: 16px;
             }
+            
+            .chatbot-button {
+                width: 55px;
+                height: 55px;
+                bottom: 10px;
+                right: 10px;
+            }
+            
+            .chatbot-header-title {
+                font-size: 1rem;
+            }
+            
+            .chatbot-badge {
+                width: 20px;
+                height: 20px;
+                font-size: 10px;
+            }
+        }
 
-            /* Make chatbot fullscreen on very small devices */
-            @media (max-width: 480px) {
-                .chatbot-panel {
-                    width: calc(100vw - 20px);
-                    height: 70vh;
-                    right: 10px;
-                    bottom: 80px;
-                    border-radius: 16px;
-                }
+        /* Very small screens - make chatbot more prominent */
+        @media (max-width: 480px) {
+            .chatbot-panel {
+                width: calc(100vw - 20px);
+                height: 75vh;
+                bottom: 75px;
+                right: 10px;
+            }
+            
+            .chatbot-button {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .chatbot-icon {
+                font-size: 20px;
             }
         }
 
@@ -657,6 +684,52 @@
             .nav-links {
                 display: none;
             }
+            
+            .btn {
+                padding: 0.6rem 1rem;
+                font-size: 0.875rem;
+            }
+            
+            .shortcuts-list {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+
+        /* Extra mobile adjustments */
+        @media (max-width: 480px) {
+            .page-title {
+                font-size: 1.5rem;
+            }
+            
+            .page-subtitle {
+                font-size: 0.875rem;
+            }
+            
+            .card-wrapper {
+                min-height: 220px;
+            }
+            
+            .flashcard {
+                min-height: 220px;
+            }
+            
+            .card-front, .card-back {
+                padding: 1.5rem;
+            }
+            
+            .question, .answer {
+                font-size: 1rem;
+            }
+            
+            .nav-buttons {
+                gap: 0.3rem;
+            }
+            
+            .btn {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.8rem;
+            }
         }
 
         /* Footer Styles */
@@ -833,7 +906,7 @@
             <!-- Toast notifications will be added dynamically -->
         </div>
 
-        <!-- Chatbot Integration - Improved UI -->
+        <!-- Chatbot Integration - Improved UI for Mobile -->
         <div class="chatbot-container">
             <div class="chatbot-button" id="chatbot-toggle">
                 <div class="chatbot-badge">1</div>
@@ -855,18 +928,23 @@
 
         <!-- Hidden styling to inject into iframe -->
         <style id="chatbot-css-to-inject">
-            .platform-banner {
-                display: none !important;
-            }
+            .platform-banner,
             .footer, 
             .powered-by, 
-            [data-testid="powered-by"] {
+            [data-testid="powered-by"],
+            [class*="powered-by"],
+            [class*="footer"],
+            [class*="platform-banner"] {
                 display: none !important;
                 visibility: hidden !important;
                 height: 0 !important;
                 width: 0 !important;
                 opacity: 0 !important;
                 pointer-events: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                position: absolute !important;
+                z-index: -999 !important;
             }
             .message-input-container {
                 border-top: none !important;
@@ -875,6 +953,21 @@
             }
             .chat-container, .chatbase-container {
                 background: transparent !important;
+            }
+            .message-bubble {
+                border-radius: 16px !important;
+                margin-bottom: 10px !important;
+            }
+            .message-bubble.user {
+                background: linear-gradient(135deg, #06b6d4, #0e7490) !important;
+            }
+            .message-bubble.ai {
+                background: rgba(255, 255, 255, 0.1) !important;
+                border: 1px solid rgba(6, 182, 212, 0.2) !important;
+            }
+            .message-input textarea {
+                border-radius: 20px !important;
+                padding: 10px 15px !important;
             }
         </style>
     </div>
@@ -1012,7 +1105,7 @@
         const chatbotClose = document.getElementById('chatbot-close');
         const chatbotIframeContainer = document.getElementById('chatbot-iframe-container');
         
-        // Initialize Chatbot
+        // Initialize Chatbot with enhanced styling for mobile
         function initChatbot() {
             // Create iframe programmatically to have more control
             const iframe = document.createElement('iframe');
@@ -1043,20 +1136,41 @@
                         style.textContent = document.getElementById('chatbot-css-to-inject').textContent;
                         iframeDocument.head.appendChild(style);
                         
-                        // Find and hide "Powered by" elements
-                        const poweredByElements = iframeDocument.querySelectorAll('[data-testid="powered-by"], .footer, .powered-by, .platform-banner');
-                        poweredByElements.forEach(element => {
-                            element.style.display = 'none';
-                            element.style.visibility = 'hidden';
-                            element.style.height = '0';
-                            element.style.opacity = '0';
+                        // Find and hide "Powered by" elements - more aggressive hiding
+                        const elementsToHide = [
+                            '[data-testid="powered-by"]',
+                            '.footer',
+                            '.powered-by',
+                            '.platform-banner',
+                            '*[class*="powered"]',
+                            '*[class*="footer"]',
+                            '*[class*="banner"]',
+                            '*[id*="footer"]',
+                            '*[id*="powered"]',
+                            '*[id*="banner"]'
+                        ];
+                        
+                        elementsToHide.forEach(selector => {
+                            const elements = iframeDocument.querySelectorAll(selector);
+                            elements.forEach(element => {
+                                element.style.display = 'none';
+                                element.style.visibility = 'hidden';
+                                element.style.height = '0';
+                                element.style.opacity = '0';
+                                element.style.position = 'absolute';
+                                element.style.zIndex = '-999';
+                                element.style.overflow = 'hidden';
+                                element.innerHTML = '';
+                            });
                         });
                     });
                     
-                    // Start observing
-                    observer.observe(iframeDocument.body, { 
+                    // Start observing with more comprehensive options
+                    observer.observe(iframeDocument, { 
                         childList: true, 
-                        subtree: true 
+                        subtree: true,
+                        attributes: true,
+                        characterData: true
                     });
                     
                     // Show a welcome toast
