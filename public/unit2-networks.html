@@ -7,6 +7,7 @@
     <title>Unit II - The Physical Layer</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+    
     <style>
         :root {
             --accent-color: #6366f1;
@@ -1510,5 +1511,75 @@
         // Start app
         init();
     </script>
+    <!-- Add this before </body> in unit2-networks.html -->
+<script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAZs1VXb5_66-CLdf5SNd5jYButjvvavs0",
+    authDomain: "cst-notes-71801.firebaseapp.com",
+    projectId: "cst-notes-71801",
+    appId: "1:671538684629:web:2cbc10e27d421975acf85c",
+    measurementId: "G-GQ4JV0K0HV"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  function logEventFirestore(eventType, details = {}) {
+    let userId = sessionStorage.getItem("user_id");
+    if (!userId) {
+      userId = "guest_" + Math.floor(Math.random() * 100000);
+      sessionStorage.setItem("user_id", userId);
+    }
+
+    let variant = sessionStorage.getItem("variant");
+    if (!variant) {
+      variant = Math.random() < 0.5 ? "A" : "B";
+      sessionStorage.setItem("variant", variant);
+    }
+
+    db.collection("unit2_analytics").add({
+      user_id: userId,
+      variant: variant,
+      event: eventType,
+      timestamp: new Date().toISOString(),
+      ...details
+    }).then(() => console.log("Logged:", eventType))
+      .catch((err) => console.error("Error logging event:", err));
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    // Page load event
+    logEventFirestore("unit2_page_view");
+
+    // Track flashcard flip
+    document.getElementById("flashcard").addEventListener("click", () => {
+      const card = document.getElementById("question").innerText;
+      logEventFirestore("card_flipped", { question: card });
+    });
+
+    // Next/Prev buttons
+    document.getElementById("next-btn").addEventListener("click", () => {
+      logEventFirestore("next_card_click");
+    });
+
+    document.getElementById("prev-btn").addEventListener("click", () => {
+      logEventFirestore("prev_card_click");
+    });
+
+    // Mark known button
+    document.getElementById("mark-known-btn").addEventListener("click", () => {
+      const card = document.getElementById("question").innerText;
+      logEventFirestore("mark_known_click", { question: card });
+    });
+
+    // Chatbot open
+    document.getElementById("chatbot-toggle")?.addEventListener("click", () => {
+      logEventFirestore("chatbot_opened");
+    });
+  });
+</script>
+
 </body>
 </html>

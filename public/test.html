@@ -1,518 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Computer Networks Flashcards</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
-    <style>
-        /* [Same CSS as before, omitted here for brevity] */
-        :root {
-            --accent-color: #6366f1;
-            --accent-hover: #4f46e5;
-            --secondary-color: #9333ea;
-            --highlight-color: #06b6d4;
-            --bg-gradient: linear-gradient(to bottom, #0f0f17, #1a1a2e);
-            --card-bg: rgba(255, 255, 255, 0.05);
-            --border-color: rgba(255, 255, 255, 0.1);
-            --text-primary: rgba(255, 255, 255, 0.95);
-            --text-secondary: rgba(255, 255, 255, 0.8);
-            --text-muted: rgba(255, 255, 255, 0.6);
-            --shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.3);
-            --transition: all 0.3s ease;
-        }
+  <meta charset="UTF-8">
+  <title>CSTNotes Analytics Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', system-ui, sans-serif;
-        }
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-        body {
-            background: var(--bg-gradient);
-            color: var(--text-primary);
-            min-height: 100vh;
-            line-height: 1.6;
-        }
+    const firebaseConfig = {
+      apiKey: "AIzaSyAZs1VXb5_66-CLdf5SNd5jYButjvvavs0",
+      authDomain: "cst-notes-71801.firebaseapp.com",
+      projectId: "cst-notes-71801",
+      storageBucket: "cst-notes-71801.appspot.com",
+      messagingSenderId: "671538684629",
+      appId: "1:671538684629:web:2cbc10e27d421975acf85c",
+      measurementId: "G-GQ4JV0K0HV"
+    };
 
-        .wrapper {
-            position: relative;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-        /* Header Styles */
-        header {
-            border-bottom: 1px solid var(--border-color);
-            backdrop-filter: blur(10px);
-            background-color: rgba(0, 0, 0, 0.3);
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
+    async function loadData() {
+      const snapshot = await getDocs(collection(db, "analytics"));
+      const data = snapshot.docs.map(doc => doc.data());
 
-        .header-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+      const eventCounts = {}, variantCounts = { A: 0, B: 0 }, hourly = Array(24).fill(0), daily = {}, users = {}, chatbot = {}, flashcard = {}, questions = {}, pages = {};
 
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: linear-gradient(to right, #fff, rgba(255, 255, 255, 0.7));
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
+      data.forEach(entry => {
+        eventCounts[entry.event] = (eventCounts[entry.event] || 0) + 1;
+        variantCounts[entry.variant] = (variantCounts[entry.variant] || 0) + 1;
 
-        .nav-links {
-            display: flex;
-            gap: 1rem;
-        }
+        const hour = new Date(entry.timestamp).getHours();
+        const day = new Date(entry.timestamp).toLocaleDateString();
+        hourly[hour]++;
+        daily[day] = (daily[day] || 0) + 1;
 
-        .nav-link {
-            color: var(--text-secondary);
-            text-decoration: none;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-        }
+        users[entry.user_id] = (users[entry.user_id] || 0) + 1;
 
-        .nav-link:hover {
-            color: var(--text-primary);
-        }
+        if (entry.event?.includes("chatbot")) chatbot[entry.event] = (chatbot[entry.event] || 0) + 1;
+        if (entry.event?.includes("Flashcards")) flashcard[entry.event] = (flashcard[entry.event] || 0) + 1;
+        if (entry.event?.includes("Important Questions")) questions[entry.event] = (questions[entry.event] || 0) + 1;
+        if (entry.event?.includes("Visited")) pages[entry.event] = (pages[entry.event] || 0) + 1;
+      });
 
-        .logout-btn {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            padding: 0.5rem;
-            cursor: pointer;
-            transition: var(--transition);
-        }
+      const chart = (id, type, labels, data, label, colors) => {
+        const ctx = document.getElementById(id).getContext("2d");
+        new Chart(ctx, {
+          type,
+          data: {
+            labels,
+            datasets: [{ label, data, backgroundColor: colors || 'rgba(54, 162, 235, 0.6)' }]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+      };
 
-        .logout-btn:hover {
-            color: var(--text-primary);
-        }
+      chart("eventChart", "bar", Object.keys(eventCounts), Object.values(eventCounts), "Event Frequency");
+      chart("variantChart", "pie", Object.keys(variantCounts), Object.values(variantCounts), "User Variant Split", ["#4CAF50", "#F44336"]);
+      chart("hourlyChart", "line", [...Array(24).keys()], hourly, "Hourly Engagement");
+      chart("dailyChart", "bar", Object.keys(daily), Object.values(daily), "Daily Visits");
+      chart("userChart", "bar", Object.keys(users), Object.values(users), "Clicks Per User");
+      chart("chatbotChart", "bar", Object.keys(chatbot), Object.values(chatbot), "Chatbot Usage");
+      chart("flashcardChart", "bar", Object.keys(flashcard), Object.values(flashcard), "Flashcard Events");
+      chart("questionChart", "bar", Object.keys(questions), Object.values(questions), "Important Question Usage");
+      chart("pageViewChart", "bar", Object.keys(pages), Object.values(pages), "Visited Pages");
+    }
 
-        /* Main Container */
-        main {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem 1rem;
-        }
+    window.addEventListener("DOMContentLoaded", loadData);
+  </script>
 
-        .page-title {
-            font-size: 2rem;
-            font-weight: 700;
-            text-align: center;
-            margin-bottom: 2.5rem;
-            background: linear-gradient(to right, #fff, rgba(255, 255, 255, 0.7));
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
-        /* Units Grid */
-        .units-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
-        .unit-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 0.75rem;
-            box-shadow: var(--shadow);
-            backdrop-filter: blur(10px);
-            overflow: hidden;
-            transition: var(--transition);
-        }
-
-        .unit-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.4);
-        }
-
-        .unit-header {
-            padding: 1.25rem 1.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            background: rgba(255, 255, 255, 0.03);
-        }
-
-        .unit-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .unit-title i {
-            color: var(--accent-color);
-        }
-
-        .unit-content {
-            padding: 1.5rem;
-        }
-
-        .unit-description {
-            margin-bottom: 1.25rem;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        .view-unit-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.75rem 1.25rem;
-            background: rgba(99, 102, 241, 0.15);
-            color: var(--accent-color);
-            border: 1px solid rgba(99, 102, 241, 0.3);
-            border-radius: 0.5rem;
-            font-weight: 500;
-            text-decoration: none;
-            transition: var(--transition);
-            width: 100%;
-            justify-content: center;
-        }
-
-        .view-unit-btn:hover {
-            background: rgba(99, 102, 241, 0.25);
-            border-color: rgba(99, 102, 241, 0.5);
-            color: var(--accent-hover);
-        }
-
-        /* Animation for background effect */
-        .animated-bg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            overflow: hidden;
-        }
-
-        .animated-bg canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .units-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .nav-links {
-                display: none;
-            }
-        }
-    </style>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111827;
+      color: #ffffff;
+      margin: 0;
+      padding: 1rem;
+      text-align: center;
+    }
+    h2 {
+      color: #60A5FA;
+    }
+    canvas {
+      margin: 2rem auto;
+      max-width: 95%;
+      background: #1f2937;
+      border-radius: 8px;
+      padding: 1rem;
+    }
+    .chart-container {
+      width: 100%;
+      max-width: 1200px;
+      height: 500px;
+      margin: 2rem auto;
+    }
+  </style>
 </head>
 <body>
-    <div class="wrapper">
-        <div class="animated-bg">
-            <canvas id="particleCanvas"></canvas>
-        </div>
-
-        <header>
-            <div class="header-content">
-                <h1 class="logo">CST Notes</h1>
-                <div class="nav-links">
-                    <a href="dashboard.html" class="nav-link">
-                        <i class="fas fa-home"></i>
-                        <span>Dashboard</span>
-                    </a>
-                </div>
-                <button class="logout-btn" onclick="alert('Signing out...')">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Sign Out</span>
-                </button>
-            </div>
-        </header>
-
-        <main>
-            <h2 class="page-title">Computer Networks Flashcards</h2>
-
-            <div class="units-grid">
-                <!-- Unit Cards: [Same HTML as before, omitted for brevity] -->
-                <div class="unit-card">
-                  <div class="unit-header">
-                      <div class="unit-title">
-                          <i class="fas fa-network-wired"></i>
-                          <span>UNIT – I Introduction</span>
-                      </div>
-                  </div>
-                  <div class="unit-content">
-                      <p class="unit-description">
-                          Uses of Computer Networks, Types of Computer Networks ,Network Technology, from Local to Global,
-Examples of Networks , Network Protocols, Reference Models , Standardization
-                      </p>
-                      <a href="unit1-networks.html" class="view-unit-btn">
-                          <i class="fas fa-book-open"></i>
-                          <span>View Flashcards</span>
-                      </a>
-                  </div>
-              </div>
-              
-              <!-- Unit 2 -->
-              <div class="unit-card">
-                  <div class="unit-header">
-                      <div class="unit-title">
-                          <i class="fas fa-microchip"></i>
-                          <span>UNIT – II The Physical Layer</span>
-                      </div>
-                  </div>
-                  <div class="unit-content">
-                      <p class="unit-description">
-                          Guided Transmission Media, Wireless Transmission, Using the Spectrum for Transmission, From
-Waveforms to Bits, Communication Satellites.
-                      </p>
-                      <a href="unit2-networks.html" class="view-unit-btn">
-                          <i class="fas fa-book-open"></i>
-                          <span>View Flashcards</span>
-                      </a>
-                  </div>
-              </div>
-              
-              <!-- Unit 3 -->
-              <div class="unit-card">
-                  <div class="unit-header">
-                      <div class="unit-title">
-                          <i class="fas fa-link"></i>
-                          <span>UNIT – III The Data Link Layer and Medium Access Control</span>
-                      </div>
-                  </div>
-                  <div class="unit-content">
-                      <p class="unit-description">
-                          Data Link Layer Design Issues, Error Detection and Correction , ElementaryData Link Protocols , Improving
-Efficiency
-                      </p>
-                      <a href="unit3-networks.html" class="view-unit-btn">
-                          <i class="fas fa-book-open"></i>
-                          <span>View Flashcards</span>
-                      </a>
-                  </div>
-              </div>
-              
-              <!-- Unit 4 -->
-              <div class="unit-card">
-                  <div class="unit-header">
-                      <div class="unit-title">
-                          <i class="fas fa-route"></i>
-                          <span>UNIT – IV The Network Layer</span>
-                      </div>
-                  </div>
-                  <div class="unit-content">
-                      <p class="unit-description">
-                          Network Layer Design Issues, Routing Algorithms in a Single Network, The Network Layer in the Internet
-                      </p>
-                      <a href="unit4-networks.html" class="view-unit-btn">
-                          <i class="fas fa-book-open"></i>
-                          <span>View Flashcards</span>
-                      </a>
-                  </div>
-              </div>
-              
-              <!-- Unit 5 -->
-              <div class="unit-card">
-                  <div class="unit-header">
-                      <div class="unit-title">
-                          <i class="fas fa-layer-group"></i>
-                          <span>UNIT – V Transport & Application Layers</span>
-                      </div>
-                  </div>
-                  <div class="unit-content">
-                      <p class="unit-description">
-                          DNS — The Domain Name System , Electronic Mail , WWW, Streaming Audio and Video
-                      </p>
-                      <a href="unit5-networks.html" class="view-unit-btn">
-                          <i class="fas fa-book-open"></i>
-                          <span>View Flashcards</span>
-                      </a>
-                  </div>
-              </div>
-          </div>
-            </div>
-
-            <h3 class="page-title">User Analytics</h3>
-            <canvas id="eventChart" width="600" height="300"></canvas>
-            <canvas id="variantChart" width="600" height="300"></canvas>
-        </main>
-    </div>
-
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyAZs1VXb5_66-CLdf5SNd5jYButjvvavs0",
-            authDomain: "cst-notes-71801.firebaseapp.com",
-            projectId: "cst-notes-71801",
-            storageBucket: "cst-notes-71801.appspot.com",
-            messagingSenderId: "671538684629",
-            appId: "1:671538684629:web:2cbc10e27d421975acf85c",
-            measurementId: "G-GQ4JV0K0HV"
-        };
-
-        const app = firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-
-        async function loadAnalytics() {
-            const snapshot = await db.collection("analytics").get();
-            const data = snapshot.docs.map(doc => doc.data());
-
-            const eventCounts = {};
-            const variantCounts = { A: 0, B: 0 };
-
-            data.forEach(entry => {
-                eventCounts[entry.event] = (eventCounts[entry.event] || 0) + 1;
-                if (entry.variant) variantCounts[entry.variant]++;
-            });
-
-            const eventCtx = document.getElementById('eventChart').getContext('2d');
-            new Chart(eventCtx, {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(eventCounts),
-                    datasets: [{
-                        label: 'Event Count',
-                        data: Object.values(eventCounts),
-                        backgroundColor: 'rgba(54, 162, 235, 0.6)'
-                    }]
-                }
-            });
-
-            const variantCtx = document.getElementById('variantChart').getContext('2d');
-            new Chart(variantCtx, {
-                type: 'pie',
-                data: {
-                    labels: ['Variant A', 'Variant B'],
-                    datasets: [{
-                        label: 'Variant Split',
-                        data: [variantCounts.A, variantCounts.B],
-                        backgroundColor: ['#4CAF50', '#F44336']
-                    }]
-                }
-            });
-        }
-
-        loadAnalytics();
-    </script>
-
-    <script>
-        // [Same particle animation script as before, omitted for brevity]
-        // Particle animation for the background
-        document.addEventListener('DOMContentLoaded', function() {
-            const canvas = document.getElementById('particleCanvas');
-            const ctx = canvas.getContext('2d');
-            
-            // Set canvas dimensions
-            function setCanvasDimensions() {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-            }
-            
-            setCanvasDimensions();
-            window.addEventListener('resize', setCanvasDimensions);
-            
-            // Create particles
-            const particles = [];
-            const particleCount = Math.min(50, Math.floor(window.innerWidth / 30));
-            
-            // Define colors
-            const colors = [
-                'rgba(99, 102, 241, 0.7)',  // Indigo
-                'rgba(139, 92, 246, 0.7)',  // Violet
-                'rgba(79, 70, 229, 0.7)',   // Indigo darker
-                'rgba(67, 56, 202, 0.7)',   // Indigo darkest
-                'rgba(124, 58, 237, 0.7)',  // Violet darker
-            ];
-            
-            // Initialize particles
-            for (let i = 0; i < particleCount; i++) {
-                particles.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    vx: (Math.random() - 0.5) * 0.5,
-                    vy: (Math.random() - 0.5) * 0.5,
-                    size: Math.random() * 2 + 1,
-                    color: colors[Math.floor(Math.random() * colors.length)],
-                    connections: []
-                });
-            }
-            
-            // Animation function
-            function animate() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                
-                // Update and draw particles
-                for (let i = 0; i < particles.length; i++) {
-                    const particle = particles[i];
-                    
-                    // Update position
-                    particle.x += particle.vx;
-                    particle.y += particle.vy;
-                    
-                    // Bounce off edges
-                    if (particle.x < 0 || particle.x > canvas.width) particle.vx *= -1;
-                    if (particle.y < 0 || particle.y > canvas.height) particle.vy *= -1;
-                    
-                    // Draw particle
-                    ctx.beginPath();
-                    ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-                    ctx.fillStyle = particle.color;
-                    ctx.fill();
-                    
-                    // Draw connections
-                    particle.connections = [];
-                    for (let j = i + 1; j < particles.length; j++) {
-                        const otherParticle = particles[j];
-                        const dx = particle.x - otherParticle.x;
-                        const dy = particle.y - otherParticle.y;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
-                        
-                        const maxDistance = Math.min(200, canvas.width / 6);
-                        if (distance < maxDistance) {
-                            particle.connections.push(j);
-                            
-                            // Draw connection
-                            ctx.beginPath();
-                            ctx.moveTo(particle.x, particle.y);
-                            ctx.lineTo(otherParticle.x, otherParticle.y);
-                            const opacity = 1 - (distance / maxDistance);
-                            ctx.strokeStyle = `rgba(99, 102, 241, ${opacity * 0.4})`;
-                            ctx.lineWidth = Math.min(2, opacity * 3);
-                            ctx.stroke();
-                        }
-                    }
-                }
-                
-                requestAnimationFrame(animate);
-            }
-            
-            animate();
-        });
-    </script>
+  <h2>CSTNotes User Analytics Dashboard</h2>
+  <div class="chart-container"><canvas id="eventChart"></canvas></div>
+  <div class="chart-container"><canvas id="variantChart"></canvas></div>
+  <div class="chart-container"><canvas id="hourlyChart"></canvas></div>
+  <div class="chart-container"><canvas id="dailyChart"></canvas></div>
+  <div class="chart-container"><canvas id="userChart"></canvas></div>
+  <div class="chart-container"><canvas id="chatbotChart"></canvas></div>
+  <div class="chart-container"><canvas id="flashcardChart"></canvas></div>
+  <div class="chart-container"><canvas id="questionChart"></canvas></div>
+  <div class="chart-container"><canvas id="pageViewChart"></canvas></div>
 </body>
 </html>

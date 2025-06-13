@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>CSTNotes Analytics Dashboard</title>
+  <title>Unit 2 Analytics Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -16,10 +16,7 @@
       apiKey: "AIzaSyAZs1VXb5_66-CLdf5SNd5jYButjvvavs0",
       authDomain: "cst-notes-71801.firebaseapp.com",
       projectId: "cst-notes-71801",
-      storageBucket: "cst-notes-71801.firebasestorage.app",
-      messagingSenderId: "671538684629",
-      appId: "1:671538684629:web:2cbc10e27d421975acf85c",
-      measurementId: "G-GQ4JV0K0HV"
+      appId: "1:671538684629:web:2cbc10e27d421975acf85c"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -27,13 +24,13 @@
 
     // Password protection
     function checkPassword() {
-      const correctPassword = "admin123";
+      const correctPassword = "unit2admin";
       const enteredPassword = document.getElementById("passwordInput").value;
       
       if (enteredPassword === correctPassword) {
         document.getElementById("passwordModal").style.display = "none";
         document.getElementById("mainContent").style.display = "block";
-        loadData();
+        loadAnalytics();
       } else {
         const errorMsg = document.getElementById("passwordError");
         errorMsg.style.display = "block";
@@ -55,286 +52,165 @@
 
     window.checkPassword = checkPassword;
 
-    async function loadData() {
+    async function loadAnalytics() {
       try {
-        const snapshot = await getDocs(collection(db, "analytics"));
+        const snapshot = await getDocs(collection(db, "unit2_analytics"));
         const data = snapshot.docs.map(doc => doc.data());
 
-        const eventCounts = {};
-        const variantCounts = { A: 0, B: 0 };
-        const timeData = {};
+        const counts = {
+          events: {},
+          variant: { A: 0, B: 0 },
+          knownClicks: {},
+          flippedQuestions: {},
+          cardFlow: { next: 0, prev: 0 },
+          hourlyActivity: Array(24).fill(0),
+          userCounts: {},
+          dailyCounts: {},
+          chatbotOpened: 0
+        };
 
         data.forEach(entry => {
-          eventCounts[entry.event] = (eventCounts[entry.event] || 0) + 1;
-          if (entry.variant) {
-            variantCounts[entry.variant] = (variantCounts[entry.variant] || 0) + 1;
+          const hour = new Date(entry.timestamp).getHours();
+          const date = new Date(entry.timestamp).toLocaleDateString();
+          counts.hourlyActivity[hour]++;
+          counts.dailyCounts[date] = (counts.dailyCounts[date] || 0) + 1;
+
+          counts.events[entry.event] = (counts.events[entry.event] || 0) + 1;
+          if (entry.variant) counts.variant[entry.variant]++;
+          if (entry.event === "mark_known_click" && entry.question) {
+            counts.knownClicks[entry.question] = (counts.knownClicks[entry.question] || 0) + 1;
           }
+          if (entry.event === "card_flipped" && entry.question) {
+            counts.flippedQuestions[entry.question] = (counts.flippedQuestions[entry.question] || 0) + 1;
+          }
+          if (entry.event === "next_card_click") counts.cardFlow.next++;
+          if (entry.event === "prev_card_click") counts.cardFlow.prev++;
+          if (entry.event === "chatbot_opened") counts.chatbotOpened++;
+          counts.userCounts[entry.user_id] = (counts.userCounts[entry.user_id] || 0) + 1;
+        });
+
+        // Enhanced chart creation with animations and styling
+        const createChart = (id, type, labels, data, label, colors = null) => {
+          const ctx = document.getElementById(id).getContext('2d');
           
-          // Generate mock time data for line chart
-          const date = new Date().toISOString().split('T')[0];
-          timeData[date] = (timeData[date] || 0) + Math.floor(Math.random() * 10) + 1;
-        });
+          let backgroundColor, borderColor;
+          if (colors) {
+            backgroundColor = colors;
+            borderColor = colors;
+          } else if (type === 'line') {
+            const lineGradient = ctx.createLinearGradient(0, 0, 0, 400);
+            lineGradient.addColorStop(0, 'rgba(139, 92, 246, 0.3)');
+            lineGradient.addColorStop(1, 'rgba(139, 92, 246, 0)');
+            backgroundColor = lineGradient;
+            borderColor = '#8B5CF6';
+          } else if (type === 'bar') {
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, '#3B82F6');
+            gradient.addColorStop(1, '#1E40AF');
+            backgroundColor = gradient;
+            borderColor = '#3B82F6';
+          } else {
+            backgroundColor = ['#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
+            borderColor = ['#065F46', '#92400E', '#B91C1C', '#5B21B6', '#0E7490'];
+          }
 
-        // Enhanced Bar chart with hover effects
-        const eventCtx = document.getElementById('eventChart').getContext('2d');
-        const gradient = eventCtx.createLinearGradient(0, 0, 0, 400);
-        gradient.addColorStop(0, '#3B82F6');
-        gradient.addColorStop(1, '#1E40AF');
-
-        new Chart(eventCtx, {
-          type: 'bar',
-          data: {
-            labels: Object.keys(eventCounts),
-            datasets: [{
-              label: 'Event Count',
-              data: Object.values(eventCounts),
-              backgroundColor: gradient,
-              borderColor: '#3B82F6',
-              borderWidth: 2,
-              borderRadius: 8,
-              borderSkipped: false,
-              hoverBackgroundColor: '#60A5FA',
-              hoverBorderColor: '#2563EB',
-              hoverBorderWidth: 3,
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: {
-              duration: 2000,
-              easing: 'easeInOutQuart'
+          new Chart(ctx, {
+            type,
+            data: {
+              labels,
+              datasets: [{
+                label,
+                data,
+                backgroundColor,
+                borderColor: type === 'line' ? borderColor : (Array.isArray(borderColor) ? borderColor : '#3B82F6'),
+                borderWidth: type === 'line' ? 3 : 2,
+                borderRadius: type === 'bar' ? 8 : 0,
+                borderSkipped: false,
+                fill: type === 'line',
+                tension: type === 'line' ? 0.4 : 0,
+                pointBackgroundColor: type === 'line' ? '#8B5CF6' : undefined,
+                pointBorderColor: type === 'line' ? '#FFFFFF' : undefined,
+                pointBorderWidth: type === 'line' ? 3 : undefined,
+                pointRadius: type === 'line' ? 6 : undefined,
+                pointHoverRadius: type === 'line' ? 10 : undefined,
+                hoverBackgroundColor: type === 'bar' ? '#60A5FA' : undefined,
+                hoverBorderColor: type === 'bar' ? '#2563EB' : undefined,
+                hoverBorderWidth: type === 'bar' ? 3 : undefined,
+                cutout: (type === 'doughnut' || type === 'pie') ? '70%' : undefined,
+                hoverOffset: (type === 'doughnut' || type === 'pie') ? 15 : undefined
+              }]
             },
-            interaction: {
-              intersect: false,
-              mode: 'index'
-            },
-            plugins: {
-              legend: { 
-                display: true,
-                labels: {
-                  color: '#E5E7EB',
-                  font: { size: 14, family: 'Inter, sans-serif' }
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              animation: {
+                duration: 2000,
+                easing: 'easeInOutQuart'
+              },
+              interaction: {
+                intersect: false,
+                mode: 'index'
+              },
+              plugins: {
+                legend: {
+                  display: true,
+                  position: (type === 'doughnut' || type === 'pie') ? 'bottom' : 'top',
+                  labels: {
+                    color: '#E5E7EB',
+                    font: { size: 14, family: 'Inter, sans-serif' },
+                    padding: 20,
+                    usePointStyle: (type === 'doughnut' || type === 'pie')
+                  }
+                },
+                tooltip: {
+                  backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                  titleColor: '#F9FAFB',
+                  bodyColor: '#E5E7EB',
+                  borderColor: '#374151',
+                  borderWidth: 1,
+                  cornerRadius: 8,
+                  displayColors: false
                 }
               },
-              tooltip: {
-                backgroundColor: 'rgba(17, 24, 39, 0.95)',
-                titleColor: '#F9FAFB',
-                bodyColor: '#E5E7EB',
-                borderColor: '#374151',
-                borderWidth: 1,
-                cornerRadius: 8,
-                displayColors: false
-              }
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-                grid: {
-                  color: '#374151',
-                  lineWidth: 0.5
+              scales: (type === 'pie' || type === 'doughnut') ? {} : {
+                y: {
+                  beginAtZero: true,
+                  grid: {
+                    color: '#374151',
+                    lineWidth: 0.5
+                  },
+                  ticks: {
+                    color: '#9CA3AF',
+                    font: { family: 'Inter, sans-serif' }
+                  }
                 },
-                ticks: {
-                  color: '#9CA3AF',
-                  font: { family: 'Inter, sans-serif' }
-                }
-              },
-              x: {
-                grid: {
-                  display: false
-                },
-                ticks: {
-                  color: '#9CA3AF',
-                  font: { family: 'Inter, sans-serif' }
+                x: {
+                  grid: {
+                    display: false
+                  },
+                  ticks: {
+                    color: '#9CA3AF',
+                    font: { family: 'Inter, sans-serif' }
+                  }
                 }
               }
             }
-          }
-        });
+          });
+        };
 
-        // Enhanced Doughnut chart
-        const variantCtx = document.getElementById('variantChart').getContext('2d');
-        new Chart(variantCtx, {
-          type: 'doughnut',
-          data: {
-            labels: ['Variant A', 'Variant B'],
-            datasets: [{
-              label: 'Variant Distribution',
-              data: [variantCounts.A, variantCounts.B],
-              backgroundColor: ['#10B981', '#F59E0B'],
-              borderColor: ['#065F46', '#92400E'],
-              borderWidth: 3,
-              cutout: '70%',
-              hoverBorderWidth: 5,
-              hoverOffset: 15
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: {
-              animateRotate: true,
-              animateScale: true,
-              duration: 2500,
-              easing: 'easeInOutQuart'
-            },
-            plugins: {
-              legend: {
-                position: 'bottom',
-                labels: {
-                  color: '#E5E7EB',
-                  font: { size: 14, family: 'Inter, sans-serif' },
-                  padding: 20,
-                  usePointStyle: true
-                }
-              },
-              tooltip: {
-                backgroundColor: 'rgba(17, 24, 39, 0.95)',
-                titleColor: '#F9FAFB',
-                bodyColor: '#E5E7EB',
-                borderColor: '#374151',
-                borderWidth: 1,
-                cornerRadius: 8
-              }
-            }
-          }
-        });
-
-        // New Line Chart - User Activity Over Time
-        const lineCtx = document.getElementById('lineChart').getContext('2d');
-        const lineGradient = lineCtx.createLinearGradient(0, 0, 0, 400);
-        lineGradient.addColorStop(0, 'rgba(139, 92, 246, 0.3)');
-        lineGradient.addColorStop(1, 'rgba(139, 92, 246, 0)');
-
-        new Chart(lineCtx, {
-          type: 'line',
-          data: {
-            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-            datasets: [{
-              label: 'Daily Active Users',
-              data: [65, 59, 80, 81, 56, 55, 40],
-              borderColor: '#8B5CF6',
-              backgroundColor: lineGradient,
-              borderWidth: 3,
-              fill: true,
-              tension: 0.4,
-              pointBackgroundColor: '#8B5CF6',
-              pointBorderColor: '#FFFFFF',
-              pointBorderWidth: 3,
-              pointRadius: 6,
-              pointHoverRadius: 10,
-              pointHoverBackgroundColor: '#A78BFA',
-              pointHoverBorderWidth: 4
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: {
-              duration: 2000,
-              easing: 'easeInOutQuart'
-            },
-            interaction: {
-              intersect: false,
-              mode: 'index'
-            },
-            plugins: {
-              legend: {
-                labels: {
-                  color: '#E5E7EB',
-                  font: { size: 14, family: 'Inter, sans-serif' }
-                }
-              },
-              tooltip: {
-                backgroundColor: 'rgba(17, 24, 39, 0.95)',
-                titleColor: '#F9FAFB',
-                bodyColor: '#E5E7EB',
-                borderColor: '#374151',
-                borderWidth: 1,
-                cornerRadius: 8
-              }
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-                grid: {
-                  color: '#374151',
-                  lineWidth: 0.5
-                },
-                ticks: {
-                  color: '#9CA3AF',
-                  font: { family: 'Inter, sans-serif' }
-                }
-              },
-              x: {
-                grid: {
-                  display: false
-                },
-                ticks: {
-                  color: '#9CA3AF',
-                  font: { family: 'Inter, sans-serif' }
-                }
-              }
-            }
-          }
-        });
-
-        // New Radar Chart - Performance Metrics
-        const radarCtx = document.getElementById('radarChart').getContext('2d');
-        new Chart(radarCtx, {
-          type: 'radar',
-          data: {
-            labels: ['Speed', 'Reliability', 'Usability', 'Security', 'Performance'],
-            datasets: [{
-              label: 'Current Metrics',
-              data: [85, 92, 78, 88, 91],
-              backgroundColor: 'rgba(34, 197, 94, 0.2)',
-              borderColor: '#22C55E',
-              borderWidth: 3,
-              pointBackgroundColor: '#22C55E',
-              pointBorderColor: '#FFFFFF',
-              pointBorderWidth: 2,
-              pointRadius: 6,
-              pointHoverRadius: 8
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: {
-              duration: 2000,
-              easing: 'easeInOutQuart'
-            },
-            plugins: {
-              legend: {
-                labels: {
-                  color: '#E5E7EB',
-                  font: { size: 14, family: 'Inter, sans-serif' }
-                }
-              }
-            },
-            scales: {
-              r: {
-                beginAtZero: true,
-                max: 100,
-                grid: {
-                  color: '#374151'
-                },
-                pointLabels: {
-                  color: '#9CA3AF',
-                  font: { family: 'Inter, sans-serif' }
-                },
-                ticks: {
-                  color: '#6B7280',
-                  backdropColor: 'transparent'
-                }
-              }
-            }
-          }
-        });
+        // Create all charts with enhanced styling
+        createChart("eventsChart", "bar", Object.keys(counts.events), Object.values(counts.events), "Event Frequency");
+        createChart("variantChart", "doughnut", ["Variant A", "Variant B"], [counts.variant.A, counts.variant.B], "User Variants", ['#10B981', '#F59E0B']);
+        createChart("knownChart", "bar", Object.keys(counts.knownClicks), Object.values(counts.knownClicks), "Most Known Cards");
+        createChart("flipChart", "bar", Object.keys(counts.flippedQuestions), Object.values(counts.flippedQuestions), "Most Flipped Cards");
+        createChart("flowChart", "doughnut", ["Next", "Previous"], [counts.cardFlow.next, counts.cardFlow.prev], "Navigation Flow", ['#3B82F6', '#EF4444']);
+        createChart("hourChart", "line", [...Array(24).keys()].map(h => `${h}:00`), counts.hourlyActivity, "Hourly Activity");
+        createChart("userChart", "bar", Object.keys(counts.userCounts), Object.values(counts.userCounts), "User Activity");
+        createChart("dateChart", "line", Object.keys(counts.dailyCounts), Object.values(counts.dailyCounts), "Daily Activity Trends");
+        createChart("chatChart", "bar", ["Chatbot Interactions"], [counts.chatbotOpened], "Chatbot Usage");
 
         // Update stats with animation
-        updateStats(eventCounts, variantCounts);
+        updateStats(counts, data.length);
         animateChartContainers();
 
       } catch (error) {
@@ -343,15 +219,16 @@
       }
     }
 
-    function updateStats(eventCounts, variantCounts) {
-      const totalEvents = Object.values(eventCounts).reduce((a, b) => a + b, 0);
-      const activeVariants = Object.keys(variantCounts).filter(k => variantCounts[k] > 0).length;
-      const dataPoints = totalEvents;
+    function updateStats(counts, totalEvents) {
+      const totalUsers = Object.keys(counts.userCounts).length;
+      const totalFlips = Object.values(counts.flippedQuestions).reduce((a, b) => a + b, 0);
+      const totalKnown = Object.values(counts.knownClicks).reduce((a, b) => a + b, 0);
 
       // Animate numbers counting up
       animateNumber('totalEvents', totalEvents);
-      animateNumber('activeVariants', activeVariants);
-      animateNumber('dataPoints', dataPoints);
+      animateNumber('totalUsers', totalUsers);
+      animateNumber('totalFlips', totalFlips);
+      animateNumber('totalKnown', totalKnown);
     }
 
     function animateNumber(elementId, finalValue) {
@@ -754,12 +631,12 @@
   <!-- Password Modal -->
   <div id="passwordModal">
     <div class="modal-content">
-      <h2 class="modal-title">🔐 Access Required</h2>
-      <p style="color: #94A3B8; margin-bottom: 1.5rem;">Enter password to access the analytics dashboard</p>
+      <h2 class="modal-title">🔐 Unit 2 Access Required</h2>
+      <p style="color: #94A3B8; margin-bottom: 1.5rem;">Enter password to access the Unit 2 analytics dashboard</p>
       <input type="password" id="passwordInput" class="password-input" placeholder="Enter password..." autocomplete="off">
       <div id="passwordError" class="password-error">❌ Incorrect password. Please try again.</div>
       <button onclick="checkPassword()" class="password-btn">🚀 Access Dashboard</button>
-      <p style="color: #6B7280; font-size: 0.8rem; margin-top: 1rem;">Hint: admin123</p>
+      <p style="color: #6B7280; font-size: 0.8rem; margin-top: 1rem;">Hint: unit2admin</p>
     </div>
   </div>
 
@@ -767,8 +644,8 @@
   <div id="mainContent">
     <div class="container">
       <div class="header">
-        <h1>📊 Analytics Dashboard</h1>
-        <p class="subtitle">CSTNotes User Insights & Performance Metrics</p>
+        <h1>📚 Unit 2 Analytics Dashboard</h1>
+        <p class="subtitle">Flashcard Learning Analytics & User Insights</p>
       </div>
       
       <div class="stats-grid">
@@ -777,12 +654,16 @@
           <div class="stat-label">🎯 Total Events</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value" id="activeVariants">--</div>
-          <div class="stat-label">🔄 Active Variants</div>
+          <div class="stat-value" id="totalUsers">--</div>
+          <div class="stat-label">👥 Active Users</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value" id="dataPoints">--</div>
-          <div class="stat-label">📈 Data Points</div>
+          <div class="stat-value" id="totalFlips">--</div>
+          <div class="stat-label">🔄 Card Flips</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="totalKnown">--</div>
+          <div class="stat-label">✅ Known Cards</div>
         </div>
       </div>
 
@@ -790,33 +671,68 @@
         <div class="chart-container">
           <h3 class="chart-title">📊 Event Analytics</h3>
           <div class="chart-wrapper">
-            <canvas id="eventChart"></canvas>
+            <canvas id="eventsChart"></canvas>
           </div>
         </div>
         
         <div class="chart-container">
-          <h3 class="chart-title">🎯 Variant Distribution</h3>
+          <h3 class="chart-title">🎯 User Variants</h3>
           <div class="chart-wrapper">
             <canvas id="variantChart"></canvas>
           </div>
         </div>
 
         <div class="chart-container">
-          <h3 class="chart-title">📈 User Activity Trends</h3>
+          <h3 class="chart-title">💡 Most Known Cards</h3>
           <div class="chart-wrapper">
-            <canvas id="lineChart"></canvas>
+            <canvas id="knownChart"></canvas>
           </div>
         </div>
 
         <div class="chart-container">
-          <h3 class="chart-title">⚡ Performance Metrics</h3>
+          <h3 class="chart-title">🔄 Most Flipped Cards</h3>
           <div class="chart-wrapper">
-            <canvas id="radarChart"></canvas>
+            <canvas id="flipChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-container">
+          <h3 class="chart-title">🔀 Navigation Flow</h3>
+          <div class="chart-wrapper">
+            <canvas id="flowChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-container">
+          <h3 class="chart-title">⏰ Hourly Activity</h3>
+          <div class="chart-wrapper">
+            <canvas id="hourChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-container">
+          <h3 class="chart-title">👤 User Activity</h3>
+          <div class="chart-wrapper">
+            <canvas id="userChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-container">
+          <h3 class="chart-title">📈 Daily Trends</h3>
+          <div class="chart-wrapper">
+            <canvas id="dateChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-container">
+          <h3 class="chart-title">💬 Chatbot Usage</h3>
+          <div class="chart-wrapper">
+            <canvas id="chatChart"></canvas>
           </div>
         </div>
       </div>
       
-      <div id="status">🔄 Loading analytics data...</div>
+      <div id="status">🔄 Loading Unit 2 analytics data...</div>
     </div>
   </div>
 </body>
